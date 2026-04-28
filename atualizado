@@ -1,0 +1,2154 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Richet — Sistema de Gestão</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy:#0F2340;--navy2:#1B3A6B;--navy3:#2B5BA8;--navy4:#4A7CC7;
+  --red:#C0392B;--red2:#E74C3C;
+  --white:#fff;--bg:#EEF2FA;
+  --g100:#F4F7FC;--g200:#E4EAF5;--g300:#C8D3E8;--g400:#94A8CC;--g600:#5A6A8A;--g800:#2C3E60;
+  --green:#1A7A45;--green-bg:#E6F5ED;
+  --amber:#9A6F02;--amber-bg:#FEF8E7;
+  --danger:#C0392B;--danger-bg:#FDECEA;
+  --purple:#6C3483;--purple-bg:#F5EEF8;
+  --teal:#0E6655;--teal-bg:#E8F6F3;
+  --surf:#fff;--bdr:#D8E0F0;
+  --text:#1A2840;--muted:#5A6A8A;
+  --sidebar:220px;--top:58px;
+  --r8:8px;--r12:12px;--r16:16px;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Sora',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;}
+a{text-decoration:none;color:inherit;}
+ 
+/* ── TOPBAR ── */
+.topbar{height:var(--top);background:var(--navy);display:flex;align-items:center;justify-content:space-between;padding:0 20px;position:fixed;top:0;left:0;right:0;z-index:200;}
+.tb-left{display:flex;align-items:center;gap:14px;}
+.hamburger{background:none;border:none;cursor:pointer;display:flex;flex-direction:column;gap:5px;padding:4px;}
+.hamburger span{display:block;width:22px;height:2px;background:rgba(255,255,255,0.7);border-radius:2px;transition:all 0.25s;}
+.hamburger.open span:nth-child(1){transform:translateY(7px) rotate(45deg);}
+.hamburger.open span:nth-child(2){opacity:0;}
+.hamburger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg);}
+.tb-logo{display:flex;align-items:center;gap:10px;}
+.tb-logo-img{width:32px;height:32px;display:flex;align-items:center;justify-content:center;}
+.tb-logo-text{color:#fff;font-size:14px;font-weight:700;letter-spacing:0.06em;}
+.tb-logo-sub{color:rgba(255,255,255,0.4);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;display:block;}
+.tb-right{display:flex;align-items:center;gap:12px;}
+.tb-date{color:rgba(255,255,255,0.45);font-size:11px;font-family:'DM Mono',monospace;}
+.tb-user-btn{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:5px 10px;cursor:pointer;color:rgba(255,255,255,0.8);font-size:12px;font-family:'Sora',sans-serif;}
+.tb-avatar{width:26px;height:26px;border-radius:50%;background:var(--navy3);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;}
+.logout-btn{background:rgba(192,57,43,0.2);border:1px solid rgba(192,57,43,0.3);color:#ff8a80;border-radius:6px;padding:4px 10px;cursor:pointer;font-size:11px;font-family:'Sora',sans-serif;}
+.logout-btn:hover{background:rgba(192,57,43,0.35);}
+ 
+/* ── SIDEBAR ── */
+.sidebar{width:var(--sidebar);background:var(--navy2);position:fixed;top:var(--top);left:0;bottom:0;z-index:150;display:flex;flex-direction:column;overflow-y:auto;transition:transform 0.28s cubic-bezier(.4,0,.2,1);}
+.sidebar.hidden{transform:translateX(calc(-1 * var(--sidebar)));}
+.nav-sec{padding:16px 0 6px;}
+.nav-lbl{color:rgba(255,255,255,0.28);font-size:9px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;padding:0 18px 7px;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 18px;color:rgba(255,255,255,0.55);font-size:12px;cursor:pointer;border-left:3px solid transparent;transition:all 0.15s;user-select:none;}
+.nav-item:hover{background:rgba(255,255,255,0.06);color:#fff;}
+.nav-item.active{background:rgba(255,255,255,0.1);color:#fff;border-left-color:var(--red);font-weight:600;}
+.nav-ico{width:15px;height:15px;flex-shrink:0;opacity:0.7;}
+.nav-item.active .nav-ico{opacity:1;}
+.sb-foot{margin-top:auto;padding:14px 18px;border-top:1px solid rgba(255,255,255,0.07);}
+.sb-user{font-size:11px;color:rgba(255,255,255,0.35);}
+.sb-user strong{color:rgba(255,255,255,0.75);display:block;font-size:12px;}
+ 
+/* ── OVERLAY (mobile sidebar) ── */
+.sb-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:140;}
+.sb-overlay.show{display:block;}
+ 
+/* ── MAIN ── */
+.main{margin-left:var(--sidebar);margin-top:var(--top);padding:24px;min-height:calc(100vh - var(--top));transition:margin-left 0.28s cubic-bezier(.4,0,.2,1);}
+.main.full{margin-left:0;}
+ 
+/* ── PAGES ── */
+.page{display:none;}
+.page.active{display:block;}
+.ph{margin-bottom:22px;}
+.ph-title{font-size:20px;font-weight:700;color:var(--navy);}
+.ph-sub{color:var(--muted);font-size:12px;margin-top:3px;}
+ 
+/* ── STAT CARDS ── */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px;}
+.sc{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r12);padding:14px 16px;}
+.sc .lbl{font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.07em;}
+.sc .val{font-size:26px;font-weight:700;color:var(--navy);margin-top:3px;line-height:1;}
+.sc .sub{font-size:10px;color:var(--muted);margin-top:3px;}
+.sc-link{cursor:pointer;transition:transform 0.12s,box-shadow 0.12s;}
+.sc-link:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(27,58,107,0.14);}
+.sc-link:hover .sc-hint{color:var(--navy3)!important;}
+.sc-hint{transition:color 0.12s;}
+.sc.t-red{border-top:3px solid var(--red2);}
+.sc.t-amb{border-top:3px solid #F39C12;}
+.sc.t-grn{border-top:3px solid #27AE60;}
+.sc.t-nvy{border-top:3px solid var(--navy3);}
+.sc.t-pur{border-top:3px solid var(--purple);}
+ 
+/* ── BADGES ── */
+.badge{display:inline-flex;align-items:center;padding:2px 9px;border-radius:20px;font-size:10px;font-weight:600;}
+.bd-nvy{background:#E4EAF5;color:var(--navy2);}
+.bd-red{background:var(--danger-bg);color:var(--danger);}
+.bd-grn{background:var(--green-bg);color:var(--green);}
+.bd-amb{background:var(--amber-bg);color:var(--amber);}
+.bd-pur{background:var(--purple-bg);color:var(--purple);}
+.bd-gray{background:var(--g200);color:var(--g600);}
+.bd-teal{background:var(--teal-bg);color:var(--teal);}
+ 
+/* ── BUTTONS ── */
+.btn{padding:8px 16px;border-radius:var(--r8);font-size:12px;font-family:'Sora',sans-serif;font-weight:600;cursor:pointer;border:none;transition:all 0.15s;}
+.btn-primary{background:var(--navy2);color:#fff;}
+.btn-primary:hover{background:var(--navy);}
+.btn-red{background:var(--red);color:#fff;}
+.btn-red:hover{background:var(--red2);}
+.btn-outline{background:transparent;border:1px solid var(--bdr);color:var(--text);}
+.btn-outline:hover{background:var(--g100);}
+.btn-sm{padding:5px 10px;font-size:11px;}
+.btn-xs{padding:3px 8px;font-size:10px;}
+ 
+/* ── FILTERS BAR ── */
+.fbar{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r12);padding:12px 16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:16px;}
+input,select,textarea{border:1px solid var(--bdr);border-radius:var(--r8);padding:7px 11px;font-size:12px;font-family:'Sora',sans-serif;color:var(--text);background:var(--g100);outline:none;transition:border-color 0.15s;}
+input:focus,select:focus,textarea:focus{border-color:var(--navy3);background:#fff;}
+.fbar input,.fbar select{font-size:12px;}
+.fbar input[type=text]{min-width:180px;}
+ 
+/* ── FORM ── */
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
+.frow.f1{grid-template-columns:1fr;}
+.frow.f3{grid-template-columns:1fr 1fr 1fr;}
+.fg{display:flex;flex-direction:column;gap:4px;}
+.flbl{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;}
+.flbl .req{color:var(--red);}
+.fcard{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r16);padding:24px;max-width:720px;}
+.fsec{font-size:11px;font-weight:700;color:var(--navy3);text-transform:uppercase;letter-spacing:0.08em;margin:20px 0 12px;padding-bottom:6px;border-bottom:1px solid var(--g200);}
+ 
+/* ── TABLE ── */
+.twrap{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r12);overflow:hidden;overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:12px;}
+thead{background:var(--g100);}
+th{padding:9px 13px;text-align:left;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.07em;border-bottom:1px solid var(--bdr);white-space:nowrap;}
+td{padding:10px 13px;border-bottom:1px solid var(--g100);vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:var(--g100);}
+ 
+/* ── COLAB CARDS ── */
+.cgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:14px;}
+.ccard{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r16);overflow:hidden;cursor:pointer;transition:box-shadow 0.15s,border-color 0.15s;}
+.ccard:hover{box-shadow:0 4px 20px rgba(27,58,107,0.13);border-color:var(--navy4);}
+.ccard.inactive{opacity:0.55;border-style:dashed;}
+.cch{background:var(--navy2);padding:13px 15px;display:flex;align-items:center;gap:11px;}
+.cavatar{width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0;}
+.cname{color:#fff;font-size:13px;font-weight:600;}
+.cmat{color:rgba(255,255,255,0.45);font-size:10px;font-family:'DM Mono',monospace;}
+.ccb{padding:13px 15px;}
+.cir{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;}
+.cil{font-size:10px;color:var(--muted);}
+.civ{font-size:11px;font-weight:600;color:var(--text);}
+.ccf{border-top:1px solid var(--bdr);padding:9px 15px;display:flex;justify-content:space-between;align-items:center;}
+ 
+/* ── MODAL ── */
+.moverlay{display:none;position:fixed;inset:0;background:rgba(10,25,50,0.6);z-index:400;align-items:flex-start;justify-content:center;padding:40px 16px;overflow-y:auto;}
+.moverlay.open{display:flex;}
+.modal{background:var(--surf);border-radius:var(--r16);width:100%;max-width:720px;box-shadow:0 20px 60px rgba(0,0,0,0.25);}
+.mh{background:var(--navy);border-radius:var(--r16) var(--r16) 0 0;padding:16px 22px;display:flex;align-items:center;justify-content:space-between;}
+.mt{color:#fff;font-size:15px;font-weight:700;}
+.msub{color:rgba(255,255,255,0.45);font-size:11px;font-family:'DM Mono',monospace;}
+.mclose{background:none;border:none;color:rgba(255,255,255,0.5);font-size:24px;cursor:pointer;line-height:1;padding:0 4px;}
+.mclose:hover{color:#fff;}
+.mb{padding:22px;}
+.mfoot{padding:14px 22px;border-top:1px solid var(--bdr);display:flex;gap:8px;justify-content:flex-end;}
+ 
+/* ── TABS ── */
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--bdr);margin-bottom:18px;}
+.tab{padding:8px 14px;font-size:12px;cursor:pointer;border-bottom:2px solid transparent;color:var(--muted);transition:all 0.15s;margin-bottom:-1px;font-weight:500;}
+.tab:hover{color:var(--text);}
+.tab.active{color:var(--navy2);border-bottom-color:var(--navy2);font-weight:700;}
+ 
+/* ── HISTORICO ── */
+.hlist{display:flex;flex-direction:column;gap:8px;}
+.hitem{background:var(--g100);border-radius:var(--r8);padding:10px 13px;border-left:3px solid var(--navy3);display:flex;justify-content:space-between;align-items:flex-start;gap:10px;}
+.hitem.atraso{border-left-color:#F39C12;}
+.hitem.falta{border-left-color:var(--red2);}
+.hitem.ferias{border-left-color:var(--navy3);}
+.hitem.atestado{border-left-color:var(--purple);}
+.hitem.compromisso{border-left-color:var(--green);}
+.hitem.avaliacao{border-left-color:var(--teal);}
+.hitem.demissao{border-left-color:#888;}
+.hitem.extras{border-left-color:#E67E22;}
+.htype{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--muted);}
+.hdesc{font-size:12px;color:var(--text);margin-top:2px;}
+.hdate{font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;white-space:nowrap;}
+ 
+/* ── SECTION TITLE ── */
+.stitle{font-size:13px;font-weight:700;color:var(--navy);margin-bottom:11px;padding-bottom:7px;border-bottom:1px solid var(--bdr);}
+.stitle-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:11px;padding-bottom:7px;border-bottom:1px solid var(--bdr);}
+.stitle-row .stitle{border:none;margin:0;padding:0;}
+ 
+/* ── CALENDAR (fechamento ponto) ── */
+.period-bar{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r12);padding:13px 16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:16px;}
+ 
+/* ── PONTO CARDS ── */
+.pcolab-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:12px;}
+.pcolab-card{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r12);overflow:hidden;}
+.pcolab-head{background:var(--g100);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--bdr);}
+.pcolab-name{font-size:12px;font-weight:700;color:var(--navy);}
+.pcolab-setor{font-size:10px;color:var(--muted);}
+.pcolab-eventos{padding:10px 14px;display:flex;flex-direction:column;gap:5px;}
+.pev-row{display:flex;align-items:center;justify-content:space-between;padding:5px 10px;border-radius:6px;cursor:pointer;transition:background 0.12s;}
+.pev-row:hover{background:var(--g100);}
+.pev-tipo{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;}
+.pev-count{font-size:11px;font-weight:700;color:var(--navy);}
+ 
+/* ── FÉRIAS CALENDAR ── */
+.fcal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:20px;}
+.fcal-dh{text-align:center;font-size:9px;font-weight:700;color:var(--muted);padding:5px 0;text-transform:uppercase;letter-spacing:0.06em;}
+.fcal-day{min-height:80px;background:var(--surf);border:1px solid var(--bdr);border-radius:6px;padding:5px;font-size:10px;}
+.fcal-day.today{border-color:var(--navy3);background:#EEF3FB;}
+.fcal-day.faded{opacity:0.3;}
+.fcal-day.other-month{background:var(--g100);}
+.fcal-dn{font-size:11px;font-weight:700;color:var(--text);margin-bottom:3px;}
+.fcal-ev{border-radius:3px;padding:1px 5px;margin-bottom:2px;font-size:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.cal-nav{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+.cal-btn{background:var(--surf);border:1px solid var(--bdr);border-radius:6px;padding:5px 12px;font-size:12px;cursor:pointer;font-family:'Sora',sans-serif;}
+.cal-btn:hover{background:var(--g100);}
+.cal-month{font-size:15px;font-weight:700;color:var(--navy);flex:1;}
+ 
+/* ── ANIVERSÁRIOS CALENDAR ── */
+.bcal{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
+.bcal-dh{text-align:center;font-size:9px;font-weight:700;color:var(--muted);padding:4px 0;text-transform:uppercase;}
+.bcal-day{min-height:60px;background:var(--surf);border:1px solid var(--bdr);border-radius:5px;padding:4px;}
+.bcal-day.today{border-color:var(--red);background:#FFF5F5;}
+.bcal-day.faded{opacity:0.3;}
+.bcal-dn{font-size:10px;font-weight:700;color:var(--text);margin-bottom:2px;}
+.bcal-ev{border-radius:3px;padding:1px 4px;margin-bottom:1px;font-size:8px;background:#FFE4E1;color:var(--red);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+ 
+/* ── TOAST ── */
+#toast{position:fixed;bottom:22px;right:22px;background:var(--navy);color:#fff;padding:11px 18px;border-radius:10px;font-size:12px;z-index:999;opacity:0;transition:opacity 0.25s;pointer-events:none;max-width:320px;}
+ 
+/* ── LOGIN PAGE ── */
+.login-page{min-height:100vh;background:var(--navy);display:flex;align-items:center;justify-content:center;padding:24px;}
+.login-card{background:#fff;border-radius:20px;padding:40px;width:100%;max-width:400px;}
+.login-logo{text-align:center;margin-bottom:30px;}
+.login-title{font-size:18px;font-weight:700;color:var(--navy);margin-bottom:4px;}
+.login-sub{font-size:12px;color:var(--muted);}
+.login-form{display:flex;flex-direction:column;gap:14px;}
+.login-form input{padding:10px 14px;font-size:13px;}
+.login-btn{background:var(--navy2);color:#fff;border:none;border-radius:var(--r8);padding:11px;font-size:13px;font-family:'Sora',sans-serif;font-weight:700;cursor:pointer;transition:background 0.15s;}
+.login-btn:hover{background:var(--navy);}
+.login-err{color:var(--red);font-size:11px;text-align:center;}
+ 
+/* ── FORM EXTERNO ── */
+.ext-page{min-height:100vh;background:linear-gradient(135deg,var(--navy) 0%,var(--navy2) 100%);display:flex;align-items:flex-start;justify-content:center;padding:40px 16px;}
+.ext-card{background:#fff;border-radius:20px;padding:36px;width:100%;max-width:680px;}
+.ext-header{text-align:center;margin-bottom:28px;}
+.ext-title{font-size:18px;font-weight:700;color:var(--navy);margin-top:12px;}
+.ext-sub{font-size:12px;color:var(--muted);margin-top:4px;}
+ 
+/* ── AVALIAÇÃO DESEMPENHO ── */
+.aval-alert{background:var(--teal-bg);border:1px solid rgba(14,102,85,0.25);border-radius:var(--r8);padding:10px 14px;display:flex;align-items:center;gap:10px;margin-bottom:10px;font-size:12px;color:var(--teal);}
+.aval-venc{background:var(--danger-bg);border:1px solid rgba(192,57,43,0.25);}
+.aval-venc-c{color:var(--danger);}
+ 
+/* ── DASH ANIVERSARIOS ── */
+.dash-bday{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r12);padding:14px 16px;}
+.bday-item{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--g100);}
+.bday-item:last-child{border-bottom:none;}
+.bday-av{width:32px;height:32px;border-radius:50%;background:var(--red);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;}
+.bday-name{font-size:12px;font-weight:600;}
+.bday-info{font-size:10px;color:var(--muted);}
+.bday-age{font-size:11px;font-weight:700;color:var(--red);margin-left:auto;}
+ 
+/* ── ALERT BAR ── */
+.alert-bar{background:var(--amber-bg);border:1px solid rgba(154,111,2,0.25);border-radius:var(--r8);padding:11px 15px;display:flex;align-items:center;gap:10px;margin-bottom:14px;font-size:12px;color:var(--amber);}
+.alert-bar.danger{background:var(--danger-bg);border-color:rgba(192,57,43,0.25);color:var(--danger);}
+ 
+/* ── FERIAS TIMELINE ── */
+.ferias-row{display:flex;align-items:center;gap:12px;background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r8);padding:10px 14px;margin-bottom:6px;}
+.fr-nome{width:170px;font-size:12px;font-weight:600;flex-shrink:0;}
+.fr-setor{width:90px;font-size:10px;color:var(--muted);flex-shrink:0;}
+.fr-info{flex:1;font-size:11px;color:var(--text);}
+.fr-status{flex-shrink:0;}
+.conflict-badge{background:var(--danger-bg);color:var(--danger);border:1px solid rgba(192,57,43,0.2);border-radius:4px;padding:2px 7px;font-size:9px;font-weight:700;margin-right:6px;}
+ 
+/* ── SETOR COLORS ── */
+.s0{background:#E8ECF4;color:#1B3A6B;}
+.s1{background:#E6F5ED;color:#1A7A45;}
+.s2{background:#FEF8E7;color:#9A6F02;}
+.s3{background:#F5EEF8;color:#6C3483;}
+.s4{background:#E8F6F3;color:#0E6655;}
+.s5{background:#FDECEA;color:#C0392B;}
+.s6{background:#FEF5E4;color:#E67E22;}
+.s7{background:#EBF5FB;color:#1A5276;}
+ 
+/* ── FILE UPLOAD ── */
+.file-upload{border:2px dashed var(--bdr);border-radius:var(--r8);padding:14px;text-align:center;font-size:12px;color:var(--muted);cursor:pointer;transition:border-color 0.15s;}
+.file-upload:hover{border-color:var(--navy3);color:var(--navy3);}
+.file-upload input[type=file]{display:none;}
+.file-name{font-size:11px;color:var(--navy3);margin-top:5px;font-weight:600;}
+ 
+/* ── AUDIT LOG ── */
+.audit-item{font-size:11px;padding:6px 0;border-bottom:1px solid var(--g100);display:flex;gap:8px;align-items:baseline;}
+.audit-item:last-child{border-bottom:none;}
+.audit-who{font-weight:700;color:var(--navy2);}
+.audit-what{color:var(--text);}
+.audit-when{color:var(--muted);font-family:'DM Mono',monospace;font-size:10px;margin-left:auto;white-space:nowrap;}
+ 
+/* ── RESPONSIVE ── */
+@media(max-width:768px){
+  :root{--sidebar:240px;}
+  .sidebar{transform:translateX(calc(-1 * var(--sidebar)));}
+  .sidebar.open{transform:translateX(0);}
+  .main{margin-left:0!important;}
+  .frow{grid-template-columns:1fr;}
+  .frow.f3{grid-template-columns:1fr;}
+  .cgrid{grid-template-columns:1fr;}
+  .pcolab-grid{grid-template-columns:1fr;}
+  .stats-grid{grid-template-columns:repeat(2,1fr);}
+  .tb-date{display:none;}
+  .fcal-day{min-height:60px;}
+  .bcal-day{min-height:48px;}
+}
+@media(max-width:600px){
+  #bday-list > div { grid-template-columns: 1fr 1fr !important; }
+  #dash-2col { grid-template-columns: 1fr !important; }
+}
+@media(max-width:400px){
+  #bday-list > div { grid-template-columns: 1fr !important; }
+}
+@media(max-width:480px){
+  .main{padding:14px;}
+  .stats-grid{grid-template-columns:1fr 1fr;}
+  .modal{max-width:100%;}
+  .moverlay{padding:10px;}
+}
+</style>
+</head>
+<body>
+ 
+<!-- LOGIN SCREEN -->
+<div id="login-screen" class="login-page">
+  <div class="login-card">
+    <div class="login-logo">
+      <svg width="60" height="44" viewBox="0 0 60 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M6 38L20 6h8L14 38H6z" fill="#1B3A6B"/>
+        <path d="M18 38L32 6h8L26 38h-8z" fill="#2B5BA8"/>
+        <path d="M30 38L44 6h8L38 38h-8z" fill="#1B3A6B"/>
+        <circle cx="50" cy="36" r="5" fill="#C0392B"/>
+      </svg>
+      <div class="login-title">RICHET</div>
+      <div class="login-sub">Sistema de Gestão de Colaboradores</div>
+    </div>
+    <div class="login-form">
+      <div class="fg">
+        <label class="flbl">CPF (login)</label>
+        <input type="text" id="li-cpf" placeholder="000.000.000-00" maxlength="14">
+      </div>
+      <div class="fg">
+        <label class="flbl">Senha</label>
+        <input type="password" id="li-senha" placeholder="••••••••">
+      </div>
+      <button class="login-btn" onclick="doLogin()">Entrar no Sistema</button>
+      <div class="login-err" id="login-err"></div>
+      <div style="text-align:center;margin-top:8px;">
+        <a href="#" style="font-size:11px;color:var(--navy3);" onclick="showForgot()">Esqueci minha senha</a>
+        &nbsp;·&nbsp;
+        <a href="?form=1" style="font-size:11px;color:var(--muted);">Formulário de Cadastro</a>
+      </div>
+    </div>
+  </div>
+</div>
+ 
+<!-- FORMULÁRIO EXTERNO DE CADASTRO (para colaboradores) -->
+<div id="ext-form-screen" style="display:none;" class="ext-page">
+  <div class="ext-card">
+    <div class="ext-header">
+      <svg width="50" height="36" viewBox="0 0 60 44" fill="none">
+        <path d="M6 38L20 6h8L14 38H6z" fill="#1B3A6B"/>
+        <path d="M18 38L32 6h8L26 38h-8z" fill="#2B5BA8"/>
+        <path d="M30 38L44 6h8L38 38h-8z" fill="#1B3A6B"/>
+        <circle cx="50" cy="36" r="5" fill="#C0392B"/>
+      </svg>
+      <div class="ext-title">Cadastro de Colaborador — Richet</div>
+      <div class="ext-sub">Preencha todos os campos abaixo com seus dados. Após o envio, seu cadastro será criado automaticamente no sistema.</div>
+    </div>
+    <div class="fsec">Dados Pessoais</div>
+    <div class="frow">
+      <div class="fg"><label class="flbl">Nome Completo <span class="req">*</span></label><input id="ef-nome" placeholder="Seu nome completo"></div>
+      <div class="fg"><label class="flbl">CPF <span class="req">*</span></label><input id="ef-cpf" placeholder="000.000.000-00" maxlength="14"></div>
+    </div>
+    <div class="frow">
+      <div class="fg"><label class="flbl">Data de Nascimento <span class="req">*</span></label><input type="date" id="ef-nasc"></div>
+      <div class="fg"><label class="flbl">Telefone / WhatsApp <span class="req">*</span></label><input id="ef-tel" placeholder="(00) 00000-0000" maxlength="16"></div>
+    </div>
+    <div class="fsec">Dados Profissionais</div>
+    <div class="frow">
+      <div class="fg"><label class="flbl">Número de Matrícula <span class="req">*</span></label><input id="ef-mat" placeholder="Ex: 0001"></div>
+      <div class="fg"><label class="flbl">Data de Admissão <span class="req">*</span></label><input type="date" id="ef-adm"></div>
+    </div>
+    <div class="frow">
+      <div class="fg"><label class="flbl">Cargo <span class="req">*</span></label>
+        <select id="ef-cargo">
+          <option value="">Selecione...</option>
+          <option>Analista de Laboratório</option>
+          <option>Citotécnico</option>
+          <option>Técnico de Laboratório</option>
+          <option>Líder de Laboratório</option>
+          <option>Técnico de Esterilização</option>
+        </select>
+      </div>
+      <div class="fg"><label class="flbl">Setor</label><input id="ef-setor" placeholder="Ex: Hematologia, Bioquímica..."></div>
+    </div>
+    <div class="frow">
+      <div class="fg"><label class="flbl">Tipo de Jornada <span class="req">*</span></label>
+        <select id="ef-jornada" onchange="efToggleHorario()">
+          <option value="">Selecione...</option>
+          <option>Plantonista Diurno</option>
+          <option>Plantonista Noturno</option>
+          <option>Diarista</option>
+        </select>
+      </div>
+      <div class="fg" id="ef-hor-g" style="display:none;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div><label class="flbl">Horário de Início</label><input type="time" id="ef-horario-ini" style="width:100%;"></div>
+        <div><label class="flbl">Horário de Término</label><input type="time" id="ef-horario-fim" style="width:100%;"></div>
+      </div>
+    </div>
+    </div>
+    <div style="margin-top:20px;display:flex;gap:10px;">
+      <button class="btn btn-primary" style="flex:1;padding:12px;" onclick="submitExtForm()">Enviar Cadastro</button>
+    </div>
+    <div id="ef-success" style="display:none;text-align:center;padding:30px 0;">
+      <div style="font-size:36px;margin-bottom:12px;">✅</div>
+      <div style="font-size:15px;font-weight:700;color:var(--navy);">Cadastro enviado com sucesso!</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:8px;">Seus dados foram registrados no sistema. A gestão irá complementar seu cadastro em breve.</div>
+    </div>
+  </div>
+</div>
+ 
+<!-- TOPBAR -->
+<div class="topbar" id="topbar" style="display:none;">
+  <div class="tb-left">
+    <button class="hamburger" id="hamburger" onclick="toggleSidebar()">
+      <span></span><span></span><span></span>
+    </button>
+    <div class="tb-logo">
+      <div class="tb-logo-img">
+        <svg width="32" height="24" viewBox="0 0 60 44" fill="none">
+          <path d="M6 38L20 6h8L14 38H6z" fill="#4A7CC7"/>
+          <path d="M18 38L32 6h8L26 38h-8z" fill="#7BA8E0"/>
+          <path d="M30 38L44 6h8L38 38h-8z" fill="#4A7CC7"/>
+          <circle cx="50" cy="36" r="5" fill="#C0392B"/>
+        </svg>
+      </div>
+      <div>
+        <span class="tb-logo-text">RICHET</span>
+        <span class="tb-logo-sub">Gestão de Colaboradores · Área Técnica</span>
+      </div>
+    </div>
+  </div>
+  <div class="tb-right">
+    <span class="tb-date" id="tb-date"></span>
+    <div class="tb-user-btn" id="tb-user-btn">
+      <div class="tb-avatar" id="tb-avatar">--</div>
+      <span id="tb-username">Usuário</span>
+    </div>
+    <button class="logout-btn" onclick="doLogout()">Sair</button>
+  </div>
+</div>
+ 
+<!-- SIDEBAR OVERLAY -->
+<div class="sb-overlay" id="sb-overlay" onclick="closeSidebar()"></div>
+ 
+<!-- SIDEBAR -->
+<div class="sidebar hidden" id="sidebar">
+  <div class="nav-sec">
+    <div class="nav-lbl">Visão Geral</div>
+    <div class="nav-item" data-page="dashboard">
+      <svg class="nav-ico" viewBox="0 0 16 16" fill="none"><rect x="1" y="1" width="6" height="6" rx="1.5" fill="currentColor"/><rect x="9" y="1" width="6" height="6" rx="1.5" fill="currentColor"/><rect x="1" y="9" width="6" height="6" rx="1.5" fill="currentColor"/><rect x="9" y="9" width="6" height="6" rx="1.5" fill="currentColor"/></svg>
+      Dashboard
+    </div>
+    <div class="nav-item" data-page="relatorio">
+      <svg class="nav-ico" viewBox="0 0 16 16" fill="none"><path d="M3 4h10M3 8h10M3 12h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      Relatório Geral
+    </div>
+  </div>
+  <div class="nav-sec">
+    <div class="nav-lbl">Colaboradores</div>
+    <div class="nav-item" data-page="colaboradores">
+      <svg class="nav-ico" viewBox="0 0 16 16" fill="none"><circle cx="6" cy="5" r="3" stroke="currentColor" stroke-width="1.5"/><path d="M1 14c0-2.761 2.239-5 5-5s5 2.239 5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="12" cy="5" r="2" stroke="currentColor" stroke-width="1.2"/><path d="M12 10c1.657 0 3 1.343 3 3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+      Todos os Colaboradores
+    </div>
+    <div class="nav-item" data-page="novo-colaborador">
+      <svg class="nav-ico" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v6M5 8h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      Novo Colaborador
+    </div>
+    <div class="nav-item" data-page="novo-evento">
+      <svg class="nav-ico" viewBox="0 0 16 16" fill="none"><rect x="2" y="3" width="12" height="11" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M5 1v4M11 1v4M2 7h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      Registrar Evento
+    </div>
+  </div>
+  <div class="nav-sec">
+    <div class="nav-lbl">Calendários</div>
+    <div class="nav-item" data-page="ponto">
+      <svg class="nav-ico" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v3.5l2.5 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      Fechamento de Ponto
+    </div>
+    <div class="nav-item" data-page="ferias-cal">
+      <svg class="nav-ico" viewBox="0 0 16 16" fill="none"><path d="M8 2C5 2 2 5 2 8s3 6 6 6 6-3 6-6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M12 2l2 2-2 2M14 4H10" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+      Calendário de Férias
+    </div>
+    <div class="nav-item" data-page="aniversarios">
+      <svg class="nav-ico" viewBox="0 0 16 16" fill="none"><path d="M8 2v2M5 3l1 1.5M11 3l-1 1.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><rect x="2" y="6" width="12" height="8" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M2 10h12" stroke="currentColor" stroke-width="1" stroke-linecap="round"/></svg>
+      Aniversários
+    </div>
+  </div>
+  <div class="nav-sec">
+    <div class="nav-lbl">Sistema</div>
+    <div class="nav-item" data-page="usuarios">
+      <svg class="nav-ico" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="6" r="3" stroke="currentColor" stroke-width="1.5"/><path d="M2 14c0-3.314 2.686-6 6-6s6 2.686 6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      Usuários / Acesso
+    </div>
+    <div class="nav-item" data-page="auditoria">
+      <svg class="nav-ico" viewBox="0 0 16 16" fill="none"><path d="M2 4h12M2 8h8M2 12h5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      Auditoria
+    </div>
+  </div>
+  <div class="sb-foot">
+    <div class="sb-user"><strong id="sb-username">—</strong>Usuário logado</div>
+  </div>
+</div>
+ 
+<!-- MAIN -->
+<div class="main full" id="main" style="display:none;">
+ 
+  <!-- DASHBOARD -->
+  <div class="page" id="page-dashboard">
+    <div class="ph"><div class="ph-title">Dashboard</div><div class="ph-sub">Visão consolidada da equipe Richet</div></div>
+    <div class="stats-grid" id="dash-stats"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:20px;" id="dash-2col">
+      <div>
+        <div class="stitle">Aniversariantes de Hoje 🎂</div>
+        <div class="dash-bday" id="dash-bday"></div>
+      </div>
+      <div>
+        <div class="stitle">Alertas de Avaliação de Desempenho</div>
+        <div id="dash-aval"></div>
+      </div>
+    </div>
+    <div style="margin-bottom:20px;">
+      <div class="stitle">Ocorrências por Setor (período atual)</div>
+      <div class="twrap"><table><thead><tr><th>Setor</th><th>Atrasos</th><th>Faltas</th><th>Compromissos</th><th>Extras</th></tr></thead><tbody id="dash-setores"></tbody></table></div>
+    </div>
+    <div>
+      <div class="stitle">Calendário de Férias Próximas</div>
+      <div id="dash-ferias-cal"></div>
+    </div>
+  </div>
+ 
+  <!-- RELATÓRIO -->
+  <div class="page" id="page-relatorio">
+    <div class="ph"><div class="ph-title">Relatório Geral</div><div class="ph-sub">Visualização consolidada de todos os eventos</div></div>
+    <div class="fbar">
+      <input type="text" id="rel-busca" placeholder="Buscar colaborador..." oninput="renderRelatorio()">
+      <select id="rel-tipo" onchange="renderRelatorio()">
+        <option value="">Todos os tipos</option>
+        <option value="atestado">Atestados</option>
+        <option value="atraso">Atrasos</option>
+        <option value="avaliacao">Avaliação de Desempenho</option>
+        <option value="compromisso">Compromissos</option>
+        <option value="demissao">Demissão / Desligamento</option>
+        <option value="extras">Extras</option>
+        <option value="falta">Faltas</option>
+        <option value="ferias">Férias</option>
+        <option value="outros">Outros</option>
+      </select>
+      <select id="rel-setor" onchange="renderRelatorio()"><option value="">Todos os setores</option></select>
+      <select id="rel-jornada" onchange="renderRelatorio()">
+        <option value="">Todas as jornadas</option>
+        <option value="Plantonista Diurno">Plantonista Diurno</option>
+        <option value="Plantonista Noturno">Plantonista Noturno</option>
+        <option value="Diarista">Diarista</option>
+      </select>
+      <input type="date" id="rel-di" onchange="renderRelatorio()">
+      <input type="date" id="rel-df" onchange="renderRelatorio()">
+    </div>
+    <div class="stats-grid" id="rel-stats"></div>
+    <div class="twrap">
+      <table><thead><tr><th>Matrícula</th><th>Colaborador</th><th>Setor</th><th>Tipo</th><th>Data</th><th>Descrição</th><th>Registrado por</th></tr></thead>
+      <tbody id="rel-tbody"></tbody></table>
+    </div>
+  </div>
+ 
+  <!-- COLABORADORES -->
+  <div class="page" id="page-colaboradores">
+    <div class="ph"><div class="ph-title">Todos os Colaboradores</div><div class="ph-sub">Gestão individual de cada membro da equipe</div></div>
+    <div class="fbar">
+      <input type="text" id="cb-busca" placeholder="Buscar por nome, matrícula ou login..." oninput="renderColabs()" style="min-width:220px;">
+      <select id="cb-setor" onchange="renderColabs()"><option value="">Todos os setores</option></select>
+      <select id="cb-jornada" onchange="renderColabs()">
+        <option value="">Todas as jornadas</option>
+        <option value="Plantonista Diurno">Plantonista Diurno</option>
+        <option value="Plantonista Noturno">Plantonista Noturno</option>
+        <option value="Diarista">Diarista</option>
+      </select>
+      <select id="cb-status" onchange="renderColabs()">
+        <option value="ativo">Ativos</option>
+        <option value="inativo">Inativos / Desligados</option>
+        <option value="">Todos</option>
+      </select>
+      <button class="btn btn-primary btn-sm" onclick="navigate('novo-colaborador')">+ Novo</button>
+    </div>
+    <div id="cb-count" style="font-size:11px;color:var(--muted);margin-bottom:12px;"></div>
+    <div class="cgrid" id="colab-grid"></div>
+  </div>
+ 
+  <!-- NOVO COLABORADOR -->
+  <div class="page" id="page-novo-colaborador">
+    <div class="ph"><div class="ph-title" id="nc-page-title">Novo Colaborador</div><div class="ph-sub">Cadastro manual — preenchido pela gestão</div></div>
+    <div class="fcard">
+      <div class="fsec">Dados Pessoais</div>
+      <div class="frow">
+        <div class="fg"><label class="flbl">Nome Completo <span class="req">*</span></label><input id="nc-nome" placeholder="Nome completo"></div>
+        <div class="fg"><label class="flbl">CPF <span class="req">*</span></label><input id="nc-cpf" placeholder="000.000.000-00" maxlength="14"></div>
+      </div>
+      <div class="frow">
+        <div class="fg"><label class="flbl">Data de Nascimento <span class="req">*</span></label><input type="date" id="nc-nasc"></div>
+        <div class="fg"><label class="flbl">Telefone / WhatsApp</label><input id="nc-tel" placeholder="(00) 00000-0000" maxlength="16"></div>
+      </div>
+      <div class="fsec">Dados Profissionais</div>
+      <div class="frow">
+        <div class="fg"><label class="flbl">Matrícula <span class="req">*</span></label><input id="nc-mat" placeholder="Ex: 0001"></div>
+        <div class="fg"><label class="flbl">Data de Admissão <span class="req">*</span></label><input type="date" id="nc-adm"></div>
+      </div>
+      <div class="frow">
+        <div class="fg"><label class="flbl">Cargo <span class="req">*</span></label>
+          <select id="nc-cargo">
+            <option value="">Selecione...</option>
+            <option>Analista de Laboratório</option>
+            <option>Citotécnico</option>
+            <option>Técnico de Laboratório</option>
+            <option>Líder de Laboratório</option>
+            <option>Técnico de Esterilização</option>
+          </select>
+        </div>
+        <div class="fg"><label class="flbl">Setor</label><input id="nc-setor" placeholder="Ex: Hematologia"></div>
+      </div>
+      <div class="frow">
+        <div class="fg"><label class="flbl">Login</label><input id="nc-login" placeholder="Ex: joao.silva"></div>
+        <div class="fg"><label class="flbl">Tipo de Jornada <span class="req">*</span></label>
+          <select id="nc-jornada" onchange="ncToggleHorario()">
+            <option value="">Selecione...</option>
+            <option>Plantonista Diurno</option>
+            <option>Plantonista Noturno</option>
+            <option>Diarista</option>
+          </select>
+        </div>
+      </div>
+      <div class="frow" id="nc-hor-row" style="display:none;">
+        <div class="fg"><label class="flbl">Horário de Início</label><input type="time" id="nc-horario-ini"></div>
+        <div class="fg"><label class="flbl">Horário de Término</label><input type="time" id="nc-horario-fim"></div>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:8px;">
+        <button class="btn btn-primary" id="nc-save-btn" onclick="salvarColab()">Cadastrar Colaborador</button>
+        <button class="btn btn-outline" onclick="navigate('colaboradores')">Cancelar</button>
+      </div>
+    </div>
+  </div>
+ 
+  <!-- NOVO EVENTO -->
+  <div class="page" id="page-novo-evento">
+    <div class="ph"><div class="ph-title">Registrar Evento</div><div class="ph-sub">Vincule ocorrências ao histórico do colaborador</div></div>
+    <div class="fcard">
+      <div class="frow f1">
+        <div class="fg"><label class="flbl">Colaborador <span class="req">*</span></label>
+          <select id="ne-colab"><option value="">Selecione...</option></select>
+        </div>
+      </div>
+      <div class="frow">
+        <div class="fg"><label class="flbl">Tipo de Evento <span class="req">*</span></label>
+          <select id="ne-tipo" onchange="neToggleFields()">
+            <option value="">Selecione...</option>
+            <option value="atestado">Atestado</option>
+            <option value="atraso">Atraso</option>
+            <option value="avaliacao">Avaliação de Desempenho</option>
+            <option value="compromisso">Compromisso</option>
+            <option value="demissao">Demissão / Desligamento</option>
+            <option value="extras">Extras (horas)</option>
+            <option value="falta">Falta</option>
+            <option value="ferias">Férias</option>
+            <option value="outros">Outros</option>
+          </select>
+        </div>
+        <div class="fg"><label class="flbl">Data <span class="req">*</span></label><input type="date" id="ne-data"></div>
+      </div>
+      <div id="ne-ferias-row" style="display:none;" class="frow">
+        <div class="fg"><label class="flbl">Duração das Férias</label>
+          <select id="ne-ferias-dur">
+            <option value="15">15 dias</option>
+            <option value="30" selected>30 dias</option>
+          </select>
+        </div>
+        <div class="fg"><label class="flbl">Data de Retorno</label><input type="date" id="ne-data-fim"></div>
+      </div>
+      <div id="ne-demissao-row" style="display:none;" class="frow">
+        <div class="fg"><label class="flbl">Motivo do Desligamento</label>
+          <select id="ne-demissao-motivo">
+            <option value="Pediu Demissão">Pediu Demissão</option>
+            <option value="Demitido">Demitido</option>
+            <option value="Outro">Outro (ex: falecimento)</option>
+          </select>
+        </div>
+        <div class="fg"><label class="flbl">Data do Desligamento</label><input type="date" id="ne-demissao-data"></div>
+      </div>
+      <div class="frow f1">
+        <div class="fg"><label class="flbl">Descrição / Observação</label>
+          <textarea id="ne-desc" rows="3" placeholder="Detalhes do evento..."></textarea>
+        </div>
+      </div>
+      <div class="frow f1" id="ne-file-row">
+        <div class="fg"><label class="flbl">Anexar Arquivo (opcional)</label>
+          <div class="file-upload" onclick="document.getElementById('ne-file-input').click()">
+            📎 Clique para anexar arquivo (PDF, imagem...)
+            <input type="file" id="ne-file-input" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" onchange="neUpdateFile()">
+            <div class="file-name" id="ne-file-name"></div>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:4px;">
+        <button class="btn btn-primary" onclick="registrarEvento()">Registrar Evento</button>
+        <button class="btn btn-outline" onclick="navigate('colaboradores')">Cancelar</button>
+      </div>
+    </div>
+  </div>
+ 
+  <!-- FECHAMENTO DE PONTO -->
+  <div class="page" id="page-ponto">
+    <div class="ph"><div class="ph-title">Fechamento de Ponto</div><div class="ph-sub">Controle de ocorrências por período — fechamento todo dia 15</div></div>
+    <div class="period-bar">
+      <div><div style="font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.06em;">Período</div><div style="font-size:14px;font-weight:700;color:var(--navy);" id="ponto-periodo"></div></div>
+      <button class="cal-btn" onclick="changePeriod(-1)">◀ Anterior</button>
+      <button class="cal-btn" onclick="changePeriod(1)">Próximo ▶</button>
+      <select id="ponto-setor" onchange="renderPonto()" style="font-size:12px;padding:6px 10px;"><option value="">Todos os setores</option></select>
+      <select id="ponto-ev-filter" onchange="renderPonto()" style="font-size:12px;padding:6px 10px;">
+        <option value="">Todos os eventos</option>
+        <option value="atraso">Atrasos</option>
+        <option value="falta">Faltas</option>
+        <option value="atestado">Atestados</option>
+        <option value="ferias">Férias</option>
+        <option value="extras">Extras</option>
+        <option value="compromisso">Compromissos</option>
+        <option value="avaliacao">Avaliação</option>
+      </select>
+    </div>
+    <div class="stats-grid" id="ponto-stats"></div>
+    <div class="pcolab-grid" id="ponto-grid"></div>
+  </div>
+ 
+  <!-- CALENDÁRIO DE FÉRIAS -->
+  <div class="page" id="page-ferias-cal">
+    <div class="ph"><div class="ph-title">Calendário de Férias</div><div class="ph-sub">Visualização, conflitos e alertas</div></div>
+    <div id="ferias-alertas"></div>
+    <div class="fbar">
+      <select id="ferias-setor" onchange="renderFeriasCal()"><option value="">Todos os setores</option></select>
+      <select id="ferias-status" onchange="renderFeriasCal()">
+        <option value="">Todos</option>
+        <option value="vermelho">Crítico (&lt;30 dias)</option>
+        <option value="amarelo">Atenção (30–60 dias)</option>
+        <option value="verde">Ok (&gt;60 dias)</option>
+      </select>
+    </div>
+    <div class="stitle">Calendário Visual — Próximos 3 meses</div>
+    <div class="cal-nav" style="display:none;">
+      <div class="cal-month" id="ferias-cal-title"></div>
+    </div>
+    <div id="ferias-cal-grid" style="margin-bottom:20px;"></div>
+    <div class="stitle">Cronograma</div>
+    <div id="ferias-timeline"></div>
+    <div style="margin-top:14px;" id="ferias-legend"></div>
+  </div>
+ 
+  <!-- ANIVERSÁRIOS -->
+  <div class="page" id="page-aniversarios">
+    <div class="ph"><div class="ph-title">Calendário de Aniversários</div><div class="ph-sub">Aniversariantes por mês — baseado na data de nascimento</div></div>
+    <div class="cal-nav">
+      <button class="cal-btn" onclick="changeBdayMes(-1)">◀</button>
+      <div class="cal-month" id="bday-cal-title"></div>
+      <button class="cal-btn" onclick="changeBdayMes(1)">▶</button>
+    </div>
+    <div style="background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r12);padding:14px;margin-bottom:20px;">
+      <div class="bcal" id="bday-cal-grid"></div>
+    </div>
+    <div class="stitle" id="bday-list-title"></div>
+    <div id="bday-list"></div>
+  </div>
+ 
+  <!-- USUÁRIOS -->
+  <div class="page" id="page-usuarios">
+    <div class="ph"><div class="ph-title">Usuários e Controle de Acesso</div><div class="ph-sub">Gerenciamento de logins da liderança</div></div>
+    <div id="user-self-warn" class="alert-bar danger" style="display:none;">⚠️ Você não pode editar sua própria conta nesta tela.</div>
+    <div class="twrap" style="margin-bottom:16px;">
+      <table><thead><tr><th>Nome</th><th>CPF (login)</th><th>E-mail</th><th>Perfil</th><th>Ações</th></tr></thead>
+      <tbody id="users-tbody"></tbody></table>
+    </div>
+    <button class="btn btn-primary btn-sm" onclick="openAddUser()">+ Adicionar Usuário</button>
+  </div>
+ 
+  <!-- AUDITORIA -->
+  <div class="page" id="page-auditoria">
+    <div class="ph"><div class="ph-title">Auditoria de Ações</div><div class="ph-sub">Registro de todas as ações realizadas no sistema</div></div>
+    <div class="fbar">
+      <input type="text" id="aud-busca" placeholder="Buscar..." oninput="renderAuditoria()" style="min-width:200px;">
+      <input type="date" id="aud-di" onchange="renderAuditoria()">
+      <input type="date" id="aud-df" onchange="renderAuditoria()">
+    </div>
+    <div style="background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r12);padding:16px;">
+      <div id="audit-list"></div>
+    </div>
+  </div>
+ 
+</div>
+ 
+<!-- MODAL COLABORADOR -->
+<div class="moverlay" id="modal-colab">
+  <div class="modal">
+    <div class="mh">
+      <div><div class="mt" id="mc-title">—</div><div class="msub" id="mc-sub">—</div></div>
+      <button class="mclose" onclick="closeModal('modal-colab')">×</button>
+    </div>
+    <div class="mb">
+      <div class="tabs">
+        <div class="tab active" onclick="switchTab('info')">Informações</div>
+        <div class="tab" onclick="switchTab('historico')">Histórico</div>
+        <div class="tab" onclick="switchTab('avaliacao')">Avaliações</div>
+        <div class="tab" onclick="switchTab('acoes')">Ações</div>
+      </div>
+      <div id="mc-tab-info"></div>
+      <div id="mc-tab-historico" style="display:none;"></div>
+      <div id="mc-tab-avaliacao" style="display:none;"></div>
+      <div id="mc-tab-acoes" style="display:none;"></div>
+    </div>
+    <div class="mfoot">
+      <button class="btn btn-primary btn-sm" onclick="openEventForColab()" id="mc-btn-evento">+ Evento</button>
+      <button class="btn btn-outline btn-sm" onclick="editColab()">Editar</button>
+      <button class="btn btn-red btn-sm" onclick="desligarColab()" id="mc-btn-desligar">Desligar</button>
+      <button class="btn btn-outline btn-sm" onclick="reativarColab()" id="mc-btn-reativar" style="display:none;color:var(--green);border-color:var(--green);">♻ Reativar</button>
+      <button class="btn btn-outline btn-sm" onclick="closeModal('modal-colab')">Fechar</button>
+    </div>
+  </div>
+</div>
+ 
+<!-- MODAL PONTO EVENTO -->
+<div class="moverlay" id="modal-ponto-ev">
+  <div class="modal" style="max-width:480px;">
+    <div class="mh">
+      <div><div class="mt" id="mpe-title">Eventos do Período</div></div>
+      <button class="mclose" onclick="closeModal('modal-ponto-ev')">×</button>
+    </div>
+    <div class="mb"><div id="mpe-list"></div></div>
+  </div>
+</div>
+ 
+<!-- MODAL ADD USER -->
+<div class="moverlay" id="modal-user">
+  <div class="modal" style="max-width:500px;">
+    <div class="mh"><div class="mt" id="mu-title">Novo Usuário</div><button class="mclose" onclick="closeModal('modal-user')">×</button></div>
+    <div class="mb">
+      <div class="frow"><div class="fg"><label class="flbl">Nome Completo</label><input id="mu-nome" placeholder="Nome"></div><div class="fg"><label class="flbl">CPF (será o login)</label><input id="mu-cpf" placeholder="000.000.000-00" maxlength="14"></div></div>
+      <div class="frow"><div class="fg"><label class="flbl">E-mail</label><input type="email" id="mu-email" placeholder="email@richet.com.br"></div><div class="fg"><label class="flbl">Senha inicial</label><input type="password" id="mu-senha" placeholder="Mínimo 6 caracteres"></div></div>
+      <div class="frow f1"><div class="fg"><label class="flbl">Perfil</label><select id="mu-perfil"><option value="lideranca">Liderança</option><option value="admin">Administrador</option></select></div></div>
+    </div>
+    <div class="mfoot">
+      <button class="btn btn-primary" onclick="saveUser()">Salvar</button>
+      <button class="btn btn-outline" onclick="closeModal('modal-user')">Cancelar</button>
+    </div>
+  </div>
+</div>
+ 
+<!-- MODAL DESLIGAR -->
+<div class="moverlay" id="modal-desligar">
+  <div class="modal" style="max-width:440px;">
+    <div class="mh"><div class="mt">Desligar Colaborador</div><button class="mclose" onclick="closeModal('modal-desligar')">×</button></div>
+    <div class="mb">
+      <div class="fg" style="margin-bottom:14px;"><label class="flbl">Motivo do Desligamento</label>
+        <select id="des-motivo"><option value="Pediu Demissão">Pediu Demissão</option><option value="Demitido">Demitido</option><option value="Outro">Outro (ex: falecimento)</option></select>
+      </div>
+      <div class="fg" style="margin-bottom:14px;"><label class="flbl">Data do Desligamento</label><input type="date" id="des-data"></div>
+      <div class="fg"><label class="flbl">Observação</label><textarea id="des-obs" rows="2" placeholder="Detalhe o motivo..."></textarea></div>
+    </div>
+    <div class="mfoot">
+      <button class="btn btn-red" onclick="confirmarDesligamento()">Confirmar Desligamento</button>
+      <button class="btn btn-outline" onclick="closeModal('modal-desligar')">Cancelar</button>
+    </div>
+  </div>
+</div>
+ 
+<div id="toast"></div>
+ 
+<script>
+// ════════════════════════════════════════
+// STATE & CONSTANTS
+// ════════════════════════════════════════
+const SETORES = ['Hematologia','Bioquímica','Microbiologia','Imunologia','Patologia','Esterilização','Citologia','Administrativo'];
+const JORNADAS = ['Plantonista Diurno','Plantonista Noturno','Diarista'];
+const CARGOS = ['Analista de Laboratório','Citotécnico','Técnico de Laboratório','Líder de Laboratório','Técnico de Esterilização'];
+const SETOR_COLORS = ['s0','s1','s2','s3','s4','s5','s6','s7'];
+const TIPO_BADGE = {atraso:'bd-amb',falta:'bd-red',atestado:'bd-pur',ferias:'bd-nvy',compromisso:'bd-teal',avaliacao:'bd-teal',demissao:'bd-gray',extras:'bd-amb',outros:'bd-gray'};
+ 
+let S = {
+  colabs: [],
+  eventos: [],
+  usuarios: [],
+  auditoria: [],
+  currentUser: null,
+  currentColabId: null,
+  pontoPeriodOffset: 0,
+  feriasMesOffset: 0,
+  bdayMesOffset: 0,
+  sidebarOpen: false,
+  editingColabId: null,
+  editingUserId: null,
+};
+ 
+// ════════════════════════════════════════
+// DASHBOARD NAV HELPERS
+// ════════════════════════════════════════
+function goToRelatorio(tipo) {
+  navigate('relatorio');
+  setTimeout(() => {
+    const sel = document.getElementById('rel-tipo');
+    if (sel) { sel.value = tipo; renderRelatorio(); }
+  }, 80);
+}
+function goToFeriasHoje() {
+  navigate('ferias-cal');
+  setTimeout(() => {
+    const sel = document.getElementById('ferias-status');
+    if (sel) { sel.value = ''; renderFeriasCal(); }
+  }, 80);
+}
+ 
+// ════════════════════════════════════════
+// SAMPLE DATA
+// ════════════════════════════════════════
+function initData() {
+  // Usuários da liderança
+  S.usuarios = [
+    {id:'U1',nome:'Thamires de Almeida Silva',cpf:'141.434.507-04',email:'thamires.silva@richet.com.br',senha:'123456',perfil:'admin'},
+    {id:'U2',nome:'Acesso Teste',cpf:'111.111.111-11',email:'teste@richet.com.br',senha:'111111',perfil:'admin'},
+  ];
+ 
+  const nomes=[
+    'Marcos Vinícius Alves','Juliana Castro Silva','Roberto Ferreira Lima','Patricia Santos Gomes',
+    'Fernanda Oliveira','Anderson Pereira','Larissa Nunes','Cláudio Barbosa','Simone Teixeira',
+    'Eduardo Costa','Vanessa Rodrigues','Renato Almeida','Cristina Sousa','Leandro Martins',
+    'Aline Freitas','Carlos Alberto Neto','Bianca Moreira','Thiago Cardoso','Miriam Lemos',
+    'Flávio Cunha','Tatiane Pinto','Jorge Manuel','Débora Ramos','Sandro Correia',
+    'Luciana Barros','Helder Vieira','Marcia Dias','Fabiano Rocha','Kelen Monteiro',
+    'Nilson Carvalho','Rosana Figueiredo','Gilberto Macedo','Camila Esteves','Dirceu Guimarães',
+    'Ester Hollanda','Frederico Bastos','Geovana Matos','Humberto Pires','Isadora Braga',
+    'Joaquim Tavares','Lúcia Simões','Marcelo Andrade','Natália Coelho','Onésimo Barros',
+    'Priscila Viana','Roberto Farias','Suely Gonçalves','Tarcísio Mota','Vera Lúcia','Alex Prado'
+  ];
+ 
+  const hoje = new Date();
+  nomes.forEach((nome, i) => {
+    const jornada = JORNADAS[i % 3];
+    const admDate = new Date(2018 + (i % 6), i % 12, (i % 28) + 1);
+    const nascDate = new Date(1980 + (i % 25), (i * 3) % 12, (i % 27) + 1);
+    S.colabs.push({
+      id:'C'+String(i+1).padStart(3,'0'),
+      matricula:String(i+1).padStart(4,'0'),
+      nome, cpf:`${String(i+1).padStart(3,'0')}.${String(i+2).padStart(3,'0')}.${String(i+3).padStart(3,'0')}-${String(i%99).padStart(2,'0')}`,
+      nascimento: nascDate.toISOString().split('T')[0],
+      admissao: admDate.toISOString().split('T')[0],
+      cargo: CARGOS[i % CARGOS.length],
+      setor: SETORES[i % SETORES.length],
+      login: nome.split(' ')[0].toLowerCase() + '.' + nome.split(' ').pop().toLowerCase(),
+      jornada, horario: jornada === 'Diarista' ? (['08:00–17:00','07:00–16:00','09:00–18:00'])[i%3] : '',
+      tel: `(11) 9${String(80000+i).padStart(4,'0')}-${String(1000+i).padStart(4,'0')}`,
+      ativo: true,
+      motDesligamento: '', dataDesligamento: ''
+    });
+  });
+ 
+  // Eventos de amostra
+  const tipos = ['atraso','falta','atestado','ferias','compromisso','extras'];
+  for (let i = 0; i < 90; i++) {
+    const colab = S.colabs[i % S.colabs.length];
+    const tipo = tipos[i % tipos.length];
+    const dOffset = Math.floor(i/tipos.length)*7 - 100;
+    const d = new Date(hoje);
+    d.setDate(d.getDate() + dOffset);
+    const ev = {
+      id:'E'+String(i+1).padStart(3,'0'), colabId:colab.id, tipo,
+      data: d.toISOString().split('T')[0], dataFim:'',
+      desc: ({atraso:'30 min de atraso',falta:'Falta sem justificativa',atestado:'Atestado médico',ferias:'Período de férias programado',compromisso:'Compromisso pessoal',extras:'3h extras'})[tipo],
+      autor:'Ana Gestora', arquivo:''
+    };
+    if (tipo === 'ferias') {
+      const fim = new Date(d); fim.setDate(fim.getDate()+30); ev.dataFim = fim.toISOString().split('T')[0];
+    }
+    S.eventos.push(ev);
+  }
+ 
+  // Avaliações de desempenho (3m, 6m, 1a)
+  S.colabs.slice(0,15).forEach((c,i) => {
+    const adm = new Date(c.admissao);
+    [3,6,12].forEach(meses => {
+      const dav = new Date(adm);
+      dav.setMonth(dav.getMonth() + meses);
+      S.eventos.push({
+        id:'AV'+c.id+'M'+meses, colabId:c.id, tipo:'avaliacao',
+        data: dav.toISOString().split('T')[0], dataFim:'',
+        desc:`Avaliação de desempenho — ${meses < 12 ? meses + ' meses' : '1 ano'}`,
+        autor:'Sistema', arquivo:'', avalMeses: meses
+      });
+    });
+  });
+ 
+  // Load any colabs submitted via external form (same browser session)
+  try {
+    const pending = JSON.parse(sessionStorage.getItem('richet_pending_colabs')||'[]');
+    pending.forEach(c => {
+      if (!S.colabs.find(x=>x.id===c.id)) S.colabs.push(c);
+    });
+  } catch(e){}
+ 
+  // Férias próximas
+  const feriasProx = [
+    {ci:0,d:addDays(hoje,18),df:addDays(hoje,48)},{ci:1,d:addDays(hoje,42),df:addDays(hoje,72)},
+    {ci:2,d:addDays(hoje,75),df:addDays(hoje,105)},{ci:3,d:addDays(hoje,14),df:addDays(hoje,44)},
+    {ci:4,d:addDays(hoje,22),df:addDays(hoje,52)},{ci:6,d:addDays(hoje,55),df:addDays(hoje,85)},
+    {ci:7,d:addDays(hoje,95),df:addDays(hoje,125)},
+  ];
+  feriasProx.forEach((f,i) => S.eventos.push({
+    id:'FP'+i, colabId:S.colabs[f.ci].id, tipo:'ferias',
+    data:f.d, dataFim:f.df, desc:'Férias programadas', autor:'Sistema', arquivo:''
+  }));
+ 
+  addAudit('Sistema','Sistema iniciado');
+}
+ 
+function addDays(d, n) {
+  const r = new Date(d); r.setDate(r.getDate()+n); return r.toISOString().split('T')[0];
+}
+function addAudit(quem, acao) {
+  S.auditoria.unshift({id:'A'+Date.now()+(Math.random()*1000|0), quem, acao, quando:new Date().toLocaleString('pt-BR')});
+}
+ 
+// ════════════════════════════════════════
+// AUTH
+// ════════════════════════════════════════
+function doLogin() {
+  const cpf = document.getElementById('li-cpf').value.trim();
+  const senha = document.getElementById('li-senha').value;
+  const user = S.usuarios.find(u => u.cpf === cpf && u.senha === senha);
+  if (!user) { document.getElementById('login-err').textContent = 'CPF ou senha incorretos.'; return; }
+  S.currentUser = user;
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('topbar').style.display = 'flex';
+  document.getElementById('main').style.display = 'block';
+  document.getElementById('tb-username').textContent = user.nome.split(' ')[0];
+  document.getElementById('sb-username').textContent = user.nome;
+  document.getElementById('tb-avatar').textContent = initials(user.nome);
+  updateDate();
+  navigate('dashboard');
+  openSidebarDesktop();
+  addAudit(user.nome, 'Login realizado');
+}
+function doLogout() {
+  addAudit(S.currentUser.nome,'Logout');
+  S.currentUser = null;
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('topbar').style.display = 'none';
+  document.getElementById('main').style.display = 'none';
+  closeSidebar();
+}
+function showForgot() { toast('Para redefinir sua senha, entre em contato com o administrador do sistema.'); }
+ 
+// ════════════════════════════════════════
+// SIDEBAR
+// ════════════════════════════════════════
+function toggleSidebar() {
+  const sb = document.getElementById('sidebar');
+  const ov = document.getElementById('sb-overlay');
+  const hb = document.getElementById('hamburger');
+  const isMobile = window.innerWidth <= 768;
+  if (isMobile) {
+    S.sidebarOpen = !S.sidebarOpen;
+    sb.classList.toggle('open', S.sidebarOpen);
+    ov.classList.toggle('show', S.sidebarOpen);
+    hb.classList.toggle('open', S.sidebarOpen);
+  } else {
+    sb.classList.toggle('hidden');
+    const main = document.getElementById('main');
+    main.classList.toggle('full', sb.classList.contains('hidden'));
+    hb.classList.toggle('open', !sb.classList.contains('hidden'));
+  }
+}
+function closeSidebar() {
+  S.sidebarOpen = false;
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sb-overlay').classList.remove('show');
+  document.getElementById('hamburger').classList.remove('open');
+}
+function openSidebarDesktop() {
+  if (window.innerWidth > 768) {
+    document.getElementById('sidebar').classList.remove('hidden');
+    document.getElementById('main').classList.remove('full');
+    document.getElementById('hamburger').classList.add('open');
+  }
+}
+ 
+// ════════════════════════════════════════
+// NAVIGATION
+// ════════════════════════════════════════
+function navigate(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const pageEl = document.getElementById('page-'+page);
+  if (pageEl) pageEl.classList.add('active');
+  const navEl = document.querySelector(`[data-page="${page}"]`);
+  if (navEl) navEl.classList.add('active');
+  if (window.innerWidth <= 768) closeSidebar();
+  renderPage(page);
+}
+document.querySelectorAll('.nav-item').forEach(el => el.addEventListener('click', () => navigate(el.dataset.page)));
+ 
+function renderPage(p) {
+  if (p==='dashboard') renderDashboard();
+  else if (p==='colaboradores') renderColabs();
+  else if (p==='relatorio') { populateSFilter('rel-setor'); renderRelatorio(); }
+  else if (p==='ponto') renderPonto();
+  else if (p==='ferias-cal') renderFeriasCal();
+  else if (p==='aniversarios') renderBdayCal();
+  else if (p==='usuarios') renderUsuarios();
+  else if (p==='auditoria') renderAuditoria();
+  else if (p==='novo-colaborador') { if (!S.editingColabId) clearNCForm(); }
+  else if (p==='novo-evento') populateEventSelects();
+}
+ 
+// ════════════════════════════════════════
+// DASHBOARD
+// ════════════════════════════════════════
+function renderDashboard() {
+  const hoje = new Date();
+  const total = S.colabs.filter(c=>c.ativo).length;
+  const period = getPeriod();
+  const periodEvs = S.eventos.filter(e => e.data >= period.ini && e.data <= period.fim);
+  const emFerias = S.colabs.filter(c => c.ativo && S.eventos.some(e => e.colabId===c.id && e.tipo==='ferias' && e.data<=hoje.toISOString().split('T')[0] && (e.dataFim||e.data)>=hoje.toISOString().split('T')[0])).length;
+ 
+  document.getElementById('dash-stats').innerHTML = `
+    <div class="sc t-nvy sc-link" onclick="navigate('colaboradores')" title="Ver todos os colaboradores">
+      <div class="lbl">Colaboradores Ativos</div><div class="val">${total}</div><div class="sub sc-hint">↗ Ver colaboradores</div></div>
+    <div class="sc t-grn sc-link" onclick="goToFeriasHoje()" title="Ver férias">
+      <div class="lbl">Em Férias Hoje</div><div class="val">${emFerias}</div><div class="sub sc-hint">↗ Ver calendário</div></div>
+    <div class="sc t-red sc-link" onclick="goToRelatorio('falta')" title="Ver faltas">
+      <div class="lbl">Faltas no Período</div><div class="val">${periodEvs.filter(e=>e.tipo==='falta').length}</div><div class="sub sc-hint">↗ Ver relatório · ${period.label}</div></div>
+    <div class="sc t-amb sc-link" onclick="goToRelatorio('atraso')" title="Ver atrasos">
+      <div class="lbl">Atrasos no Período</div><div class="val">${periodEvs.filter(e=>e.tipo==='atraso').length}</div><div class="sub sc-hint">↗ Ver relatório</div></div>
+    <div class="sc t-pur sc-link" onclick="goToRelatorio('avaliacao')" title="Ver avaliações">
+      <div class="lbl">Avaliações Pendentes</div><div class="val">${getAvaliacoesPendentes().length}</div><div class="sub sc-hint">↗ Ver relatório</div></div>
+  `;
+ 
+  // Aniversariantes hoje
+  const hojeMD = `${String(hoje.getMonth()+1).padStart(2,'0')}-${String(hoje.getDate()).padStart(2,'0')}`;
+  const bdaysHoje = S.colabs.filter(c => c.ativo && c.nascimento && c.nascimento.slice(5) === hojeMD);
+  const bdayEl = document.getElementById('dash-bday');
+  bdayEl.innerHTML = bdaysHoje.length ? bdaysHoje.map(c => {
+    const age = hoje.getFullYear() - parseInt(c.nascimento.slice(0,4));
+    return `<div class="bday-item"><div class="bday-av">${initials(c.nome)}</div><div><div class="bday-name">${c.nome}</div><div class="bday-info">${c.setor} · ${c.cargo}</div></div><div class="bday-age">🎂 ${age} anos</div></div>`;
+  }).join('') : '<div style="font-size:12px;color:var(--muted);padding:10px 0;">Nenhum aniversariante hoje.</div>';
+ 
+  // Alertas avaliação
+  const avals = getAvaliacoesPendentes().slice(0,5);
+  const avalEl = document.getElementById('dash-aval');
+  avalEl.innerHTML = avals.length ? avals.map(a => {
+    const colab = S.colabs.find(c=>c.id===a.colabId);
+    if (!colab) return '';
+    const dias = Math.round((new Date(a.data)-hoje)/86400000);
+    const vencida = dias < 0;
+    return `<div class="aval-alert ${vencida?'aval-venc':''}">
+      <span class="${vencida?'aval-venc-c':''}">📋</span>
+      <span style="font-size:12px;"><strong>${colab.nome}</strong> — ${a.desc} ${vencida?'<span class="aval-venc-c">(VENCIDA '+Math.abs(dias)+' dias)</span>':'em '+dias+' dias'}</span>
+    </div>`;
+  }).join('') : '<div style="font-size:12px;color:var(--muted);padding:8px;">Nenhuma avaliação próxima.</div>';
+ 
+  // Ocorrências por setor
+  const setorEvs = {};
+  SETORES.forEach(s => setorEvs[s] = {atraso:0,falta:0,compromisso:0,extras:0});
+  periodEvs.forEach(e => {
+    const c = S.colabs.find(x=>x.id===e.colabId);
+    if (!c || !setorEvs[c.setor]) return;
+    if (setorEvs[c.setor][e.tipo]!==undefined) setorEvs[c.setor][e.tipo]++;
+  });
+  document.getElementById('dash-setores').innerHTML = Object.entries(setorEvs).map(([s,ev]) =>
+    `<tr><td><span class="badge ${SETOR_COLORS[SETORES.indexOf(s)%8]}">${s}</span></td><td>${ev.atraso||'—'}</td><td>${ev.falta||'—'}</td><td>${ev.compromisso||'—'}</td><td>${ev.extras||'—'}</td></tr>`
+  ).join('');
+ 
+  // Mini calendário férias
+  renderDashFeriasCal();
+}
+ 
+function renderDashFeriasCal() {
+  const hoje = new Date();
+  // Férias próximas (até 90 dias) com barra visual, 3 meses
+  const limite90 = new Date(hoje); limite90.setDate(hoje.getDate()+90);
+  const fEvs = S.eventos.filter(e => {
+    if (e.tipo!=='ferias' || !e.dataFim) return false;
+    const ini = new Date(e.data);
+    return ini <= limite90; // começa dentro de 90 dias
+  });
+  // Deduplica por colabId (pega a mais próxima futura)
+  const colabNextFerias = {};
+  fEvs.forEach(e => {
+    const ini = new Date(e.data);
+    const dias = Math.floor((ini - hoje)/86400000);
+    if (!colabNextFerias[e.colabId] || new Date(e.data) < new Date(colabNextFerias[e.colabId].data)) {
+      colabNextFerias[e.colabId] = e;
+    }
+  });
+  const feriasList = Object.values(colabNextFerias).sort((a,b)=>new Date(a.data)-new Date(b.data));
+ 
+  const MNAMES=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  const MFULL=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+ 
+  // Build 3 month mini-calendars side by side
+  let html = '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">';
+  for (let mOffset = 0; mOffset < 3; mOffset++) {
+    const refD = new Date(hoje.getFullYear(), hoje.getMonth()+mOffset, 1);
+    const mMes = refD.getMonth(), mAno = refD.getFullYear();
+    const diasNoMes = new Date(mAno, mMes+1, 0).getDate();
+    const startDow = (refD.getDay()+6)%7;
+    const DNAMES = ['S','T','Q','Q','S','S','D'];
+ 
+    // Which férias span this month?
+    const feriasDesseMes = feriasList.filter(e => {
+      const ini = new Date(e.data), fim = new Date(e.dataFim||e.data);
+      const mesIni = new Date(mAno, mMes, 1), mesFim = new Date(mAno, mMes, diasNoMes);
+      return ini <= mesFim && fim >= mesIni;
+    });
+ 
+    // Color assignment per ferias entry
+    const BAR_COLORS = [
+      {bg:'#1B3A6B',text:'#fff'},{bg:'#1A7A45',text:'#fff'},{bg:'#C0392B',text:'#fff'},
+      {bg:'#6C3483',text:'#fff'},{bg:'#0E6655',text:'#fff'},{bg:'#E67E22',text:'#fff'},
+      {bg:'#1A5276',text:'#fff'},{bg:'#784212',text:'#fff'},
+    ];
+    const feriaColorMap = {};
+    feriasDesseMes.forEach((e,i)=>{ feriaColorMap[e.id||e.colabId] = BAR_COLORS[i%BAR_COLORS.length]; });
+ 
+    html += `<div style="background:var(--surf);border:1px solid var(--bdr);border-radius:10px;overflow:hidden;">`;
+    html += `<div style="background:var(--navy2);padding:8px 10px;font-size:11px;font-weight:700;color:#fff;">${MFULL[mMes]} ${mAno}</div>`;
+    html += `<div style="padding:8px;">`;
+    html += `<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:1px;margin-bottom:4px;">`;
+    html += DNAMES.map(d=>`<div style="text-align:center;font-size:8px;font-weight:700;color:var(--muted);padding:2px 0;">${d}</div>`).join('');
+    // blank days
+    for (let i=0;i<startDow;i++) html += `<div></div>`;
+    // actual days
+    for (let d=1;d<=diasNoMes;d++) {
+      const dStr = `${mAno}-${String(mMes+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      const isToday = d===hoje.getDate()&&mMes===hoje.getMonth()&&mAno===hoje.getFullYear();
+      // which ferias are active on this day?
+      const activeFerias = feriasDesseMes.filter(e => e.data<=dStr && (e.dataFim||e.data)>=dStr);
+      
+      let cellBg = isToday ? '#EEF3FB' : 'transparent';
+      let cellBorder = isToday ? '1px solid var(--navy3)' : '1px solid transparent';
+      let dots = '';
+      if (activeFerias.length) {
+        const col = feriaColorMap[activeFerias[0].id||activeFerias[0].colabId];
+        cellBg = col ? col.bg+'22' : '#E4EAF5';
+        dots = activeFerias.map(e=>{
+          const col2 = feriaColorMap[e.id||e.colabId];
+          return `<div style="width:4px;height:4px;border-radius:50%;background:${col2?.bg||'#1B3A6B'};margin:0 auto;"></div>`;
+        }).join('');
+      }
+      html += `<div style="text-align:center;padding:2px 1px;border-radius:3px;background:${cellBg};border:${cellBorder};">
+        <div style="font-size:9px;font-weight:${isToday?'700':'500'};color:${isToday?'var(--navy)':'var(--text)'};">${d}</div>
+        ${dots}
+      </div>`;
+    }
+    html += `</div>`;
+    
+    // Legend: who is on férias this month
+    if (feriasDesseMes.length) {
+      html += `<div style="border-top:1px solid var(--bdr);padding-top:6px;margin-top:2px;display:flex;flex-direction:column;gap:3px;">`;
+      feriasDesseMes.forEach(e => {
+        const c = S.colabs.find(x=>x.id===e.colabId);
+        if (!c) return;
+        const col = feriaColorMap[e.id||e.colabId];
+        const dias = Math.floor((new Date(e.data)-hoje)/86400000);
+        html += `<div style="display:flex;align-items:center;gap:5px;">
+          <div style="width:10px;height:10px;border-radius:2px;background:${col?.bg||'#1B3A6B'};flex-shrink:0;"></div>
+          <div style="font-size:9px;font-weight:600;color:var(--text);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${c.nome.split(' ')[0]} ${c.nome.split(' ').pop()}</div>
+          <div style="font-size:9px;color:var(--muted);">${fmtDate(e.data).slice(0,5)}</div>
+        </div>`;
+      });
+      html += `</div>`;
+    } else {
+      html += `<div style="padding-top:6px;font-size:9px;color:var(--muted);text-align:center;">Sem férias</div>`;
+    }
+    html += `</div></div>`;
+  }
+  html += '</div>';
+  if (!feriasList.length) html = '<div style="font-size:12px;color:var(--muted);padding:12px;">Nenhuma férias nos próximos 90 dias.</div>';
+  document.getElementById('dash-ferias-cal').innerHTML = html;
+}
+ 
+// ════════════════════════════════════════
+// AVALIAÇÕES DESEMPENHO
+// ════════════════════════════════════════
+function getAvaliacoesPendentes() {
+  const hoje = new Date();
+  const daqui60 = new Date(); daqui60.setDate(daqui60.getDate()+60);
+  // Para cada colab ativo, calcular avaliações baseadas na admissão
+  const pendentes = [];
+  S.colabs.filter(c=>c.ativo).forEach(c => {
+    const adm = new Date(c.admissao);
+    [3,6,12].forEach(meses => {
+      const dav = new Date(adm); dav.setMonth(dav.getMonth()+meses);
+      if (dav <= daqui60 && dav >= new Date(hoje.getFullYear()-1, hoje.getMonth(), hoje.getDate())) {
+        const done = S.eventos.find(e => e.colabId===c.id && e.tipo==='avaliacao' && e.avalMeses===meses);
+        if (!done) pendentes.push({
+          colabId:c.id, data:dav.toISOString().split('T')[0],
+          desc:`Avaliação ${meses<12?meses+' meses':'12 meses'}`,
+          avalMeses:meses
+        });
+      }
+    });
+  });
+  return pendentes.sort((a,b) => new Date(a.data)-new Date(b.data));
+}
+ 
+// ════════════════════════════════════════
+// COLABORADORES
+// ════════════════════════════════════════
+function renderColabs() {
+  const busca = (document.getElementById('cb-busca')?.value||'').toLowerCase();
+  const setor = document.getElementById('cb-setor')?.value||'';
+  const jornada = document.getElementById('cb-jornada')?.value||'';
+  const status = document.getElementById('cb-status')?.value||'ativo';
+  populateSFilter('cb-setor', setor);
+ 
+  let list = [...S.colabs].sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'));
+  if (status === 'ativo') list = list.filter(c=>c.ativo);
+  else if (status === 'inativo') list = list.filter(c=>!c.ativo);
+  if (busca) list = list.filter(c => c.nome.toLowerCase().includes(busca) || c.matricula.includes(busca) || (c.login||'').toLowerCase().includes(busca));
+  if (setor) list = list.filter(c=>c.setor===setor);
+  if (jornada) list = list.filter(c=>c.jornada===jornada);
+ 
+  document.getElementById('cb-count').textContent = `${list.length} colaborador(es) encontrado(s)`;
+ 
+  document.getElementById('colab-grid').innerHTML = list.map(c => {
+    const evs = S.eventos.filter(e=>e.colabId===c.id);
+    const scIdx = SETORES.indexOf(c.setor)%8;
+    const jBadge = c.jornada==='Plantonista Diurno'?'bd-nvy':c.jornada==='Plantonista Noturno'?'bd-gray':'bd-grn';
+    return `<div class="ccard ${c.ativo?'':'inactive'}" onclick="openColab('${c.id}')">
+      <div class="cch"><div class="cavatar">${initials(c.nome)}</div>
+        <div><div class="cname">${c.nome}</div><div class="cmat">#${c.matricula}${c.ativo?'':' · DESLIGADO'}</div></div>
+      </div>
+      <div class="ccb">
+        <div class="cir"><span class="cil">Cargo</span><span class="civ" style="font-size:10px;">${c.cargo}</span></div>
+        <div class="cir"><span class="cil">Setor</span><span class="badge ${SETOR_COLORS[scIdx]}">${c.setor}</span></div>
+        <div class="cir"><span class="cil">Admissão</span><span class="civ">${fmtDate(c.admissao)}</span></div>
+        ${c.login?`<div class="cir"><span class="cil">Login</span><span class="civ" style="font-family:'DM Mono',monospace;font-size:10px;">${c.login}</span></div>`:''}
+      </div>
+      <div class="ccf"><span class="badge ${jBadge}">${c.jornada}</span><span style="font-size:10px;color:var(--muted);">${evs.length} evento(s)</span></div>
+    </div>`;
+  }).join('') || '<div style="grid-column:1/-1;text-align:center;padding:48px;color:var(--muted);">Nenhum colaborador encontrado.</div>';
+}
+ 
+function openColab(id) {
+  S.currentColabId = id;
+  const c = S.colabs.find(x=>x.id===id);
+  if (!c) return;
+  document.getElementById('mc-title').textContent = c.nome;
+  document.getElementById('mc-sub').textContent = `#${c.matricula} · ${c.cargo}`;
+  // Show/hide desligar vs reativar
+  document.getElementById('mc-btn-desligar').style.display = c.ativo?'inline-flex':'none';
+  document.getElementById('mc-btn-reativar').style.display = c.ativo?'none':'inline-flex';
+  document.getElementById('mc-btn-evento').style.display = c.ativo?'inline-flex':'none';
+  switchTab('info');
+  document.getElementById('modal-colab').classList.add('open');
+}
+ 
+function renderMCInfo() {
+  const c = S.colabs.find(x=>x.id===S.currentColabId);
+  if (!c) return;
+  const fields = [
+    {l:'Matrícula',v:c.matricula},{l:'CPF',v:c.cpf},{l:'Nascimento',v:fmtDate(c.nascimento)},
+    {l:'Admissão',v:fmtDate(c.admissao)},{l:'Cargo',v:c.cargo},{l:'Setor',v:c.setor},
+    {l:'Jornada',v:c.jornada},{l:'Horário',v:c.horario||'—'},{l:'Login',v:c.login||'—'},
+    {l:'Telefone',v:c.tel||'—'},
+    ...(c.ativo?[]:[{l:'Desligamento',v:c.motDesligamento+' em '+fmtDate(c.dataDesligamento)}])
+  ];
+  document.getElementById('mc-tab-info').innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px;">
+      ${fields.map(f=>`<div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:3px;">${f.l}</div><div style="font-size:13px;font-weight:600;">${f.v}</div></div>`).join('')}
+    </div>`;
+}
+ 
+function renderMCHistorico() {
+  const evs = S.eventos.filter(e=>e.colabId===S.currentColabId).sort((a,b)=>new Date(b.data)-new Date(a.data));
+  document.getElementById('mc-tab-historico').innerHTML = evs.length ?
+    `<div class="hlist">${evs.map(e=>`<div class="hitem ${e.tipo}">
+      <div><div class="htype">${e.tipo}</div><div class="hdesc">${e.desc||'—'}</div>
+      ${e.dataFim?`<div style="font-size:10px;color:var(--muted);">Até: ${fmtDate(e.dataFim)}</div>`:''}
+      ${e.arquivo?`<div style="font-size:10px;color:var(--navy3);margin-top:2px;">📎 ${e.arquivo}</div>`:''}
+      <div style="font-size:10px;color:var(--muted);margin-top:2px;">Por: ${e.autor||'—'}</div>
+      </div><div class="hdate">${fmtDate(e.data)}</div>
+    </div>`).join('')}</div>` :
+    '<div style="font-size:12px;color:var(--muted);padding:12px 0;">Nenhum evento registrado.</div>';
+}
+ 
+function renderMCAvaliacao() {
+  const c = S.colabs.find(x=>x.id===S.currentColabId);
+  if (!c) return;
+  const adm = new Date(c.admissao);
+  const hoje = new Date();
+  const avalItems = [3,6,12].map(meses => {
+    const dav = new Date(adm); dav.setMonth(dav.getMonth()+meses);
+    const done = S.eventos.find(e=>e.colabId===c.id && e.tipo==='avaliacao' && e.avalMeses===meses);
+    const dias = Math.round((dav-hoje)/86400000);
+    const status = done ? 'realizada' : dias < 0 ? 'vencida' : dias <= 30 ? 'proxima' : 'ok';
+    return {meses,data:dav,done,dias,status};
+  });
+  const statusColors = {realizada:'bd-grn',vencida:'bd-red',proxima:'bd-amb',ok:'bd-nvy'};
+  const statusLabel = {realizada:'Realizada',vencida:'Vencida',proxima:'Próxima',ok:'Agendada'};
+  document.getElementById('mc-tab-avaliacao').innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      ${avalItems.map(av=>`
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--g100);border-radius:var(--r8);">
+          <div><div style="font-size:12px;font-weight:700;">Avaliação ${av.meses<12?av.meses+' meses':'12 meses'}</div>
+          <div style="font-size:11px;color:var(--muted);">${fmtDate(av.data.toISOString().split('T')[0])} ${av.dias>0?'· em '+av.dias+' dias':av.dias<0?'· '+Math.abs(av.dias)+' dias atrás':''}</div>
+          ${av.done?`<div style="font-size:10px;color:var(--green);margin-top:2px;">✓ Registrado em ${fmtDate(av.done.data)}</div>`:''}
+          </div>
+          <span class="badge ${statusColors[av.status]}">${statusLabel[av.status]}</span>
+        </div>`).join('')}
+    </div>`;
+}
+ 
+function renderMCAcoes() {
+  const evs = S.eventos.filter(e=>e.colabId===S.currentColabId).sort((a,b)=>new Date(b.data)-new Date(a.data));
+  if (!evs.length) {
+    document.getElementById('mc-tab-acoes').innerHTML='<div style="font-size:12px;color:var(--muted);padding:12px 0;">Nenhuma ação registrada.</div>';
+    return;
+  }
+  document.getElementById('mc-tab-acoes').innerHTML=`
+    <div style="font-size:11px;color:var(--muted);margin-bottom:10px;">Registro de quem realizou cada ação sobre este colaborador.</div>
+    <div style="display:flex;flex-direction:column;gap:6px;">
+      ${evs.map(e=>`
+        <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--g100);border-radius:var(--r8);">
+          <div style="width:28px;height:28px;border-radius:50%;background:var(--navy2);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;flex-shrink:0;">${initials(e.autor||'?')}</div>
+          <div style="flex:1;">
+            <div style="font-size:12px;font-weight:700;color:var(--navy);">${e.autor||'Sistema'}</div>
+            <div style="font-size:11px;color:var(--muted);">Registrou: <span class="badge ${TIPO_BADGE[e.tipo]||'bd-gray'}" style="font-size:9px;">${e.tipo}</span> — ${e.desc||'—'}</div>
+          </div>
+          <div style="font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;white-space:nowrap;">${fmtDate(e.data)}</div>
+        </div>`).join('')}
+    </div>`;
+}
+ 
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active',
+    (i===0&&tab==='info')||(i===1&&tab==='historico')||(i===2&&tab==='avaliacao')||(i===3&&tab==='acoes')));
+  document.getElementById('mc-tab-info').style.display = tab==='info'?'block':'none';
+  document.getElementById('mc-tab-historico').style.display = tab==='historico'?'block':'none';
+  document.getElementById('mc-tab-avaliacao').style.display = tab==='avaliacao'?'block':'none';
+  document.getElementById('mc-tab-acoes').style.display = tab==='acoes'?'block':'none';
+  if (tab==='info') renderMCInfo();
+  else if (tab==='historico') renderMCHistorico();
+  else if (tab==='avaliacao') renderMCAvaliacao();
+  else if (tab==='acoes') renderMCAcoes();
+}
+ 
+function openEventForColab() {
+  closeModal('modal-colab');
+  navigate('novo-evento');
+  setTimeout(()=>{ document.getElementById('ne-colab').value = S.currentColabId; },50);
+}
+ 
+function editColab() {
+  S.editingColabId = S.currentColabId;
+  closeModal('modal-colab');
+  const c = S.colabs.find(x=>x.id===S.editingColabId);
+  navigate('novo-colaborador');
+  setTimeout(()=>{
+    document.getElementById('nc-page-title').textContent = 'Editar Colaborador';
+    document.getElementById('nc-nome').value = c.nome;
+    document.getElementById('nc-cpf').value = c.cpf;
+    document.getElementById('nc-nasc').value = c.nascimento;
+    document.getElementById('nc-tel').value = c.tel||'';
+    document.getElementById('nc-mat').value = c.matricula;
+    document.getElementById('nc-adm').value = c.admissao;
+    document.getElementById('nc-cargo').value = c.cargo;
+    document.getElementById('nc-setor').value = c.setor;
+    document.getElementById('nc-login').value = c.login||'';
+    document.getElementById('nc-jornada').value = c.jornada;
+    if (c.horario && c.horario.includes(' – ')) {
+      const parts = c.horario.split(' – ');
+      document.getElementById('nc-horario-ini').value = parts[0]||'';
+      document.getElementById('nc-horario-fim').value = parts[1]||'';
+    }
+    ncToggleHorario();
+    document.getElementById('nc-save-btn').textContent = 'Salvar Alterações';
+    document.getElementById('nc-save-btn').onclick = salvarColab;
+  },50);
+}
+ 
+function desligarColab() {
+  if (!S.colabs.find(x=>x.id===S.currentColabId)?.ativo) { toast('Colaborador já está desligado.'); return; }
+  document.getElementById('des-data').value = new Date().toISOString().split('T')[0];
+  closeModal('modal-colab');
+  document.getElementById('modal-desligar').classList.add('open');
+}
+ 
+function reativarColab() {
+  const c = S.colabs.find(x=>x.id===S.currentColabId);
+  if (!c) return;
+  c.ativo = true;
+  c.motDesligamento = '';
+  c.dataDesligamento = '';
+  addAudit(S.currentUser?.nome,'Reativação de colaborador: '+c.nome);
+  closeModal('modal-colab');
+  toast(c.nome+' reativado(a) com sucesso!');
+  renderColabs();
+}
+ 
+function confirmarDesligamento() {
+  const c = S.colabs.find(x=>x.id===S.currentColabId);
+  if (!c) return;
+  c.ativo = false;
+  c.motDesligamento = document.getElementById('des-motivo').value;
+  c.dataDesligamento = document.getElementById('des-data').value;
+  const obs = document.getElementById('des-obs').value;
+  S.eventos.push({id:'DES'+Date.now(),colabId:c.id,tipo:'demissao',
+    data:c.dataDesligamento,dataFim:'',desc:c.motDesligamento+(obs?': '+obs:''),
+    autor:S.currentUser?.nome||'Sistema',arquivo:'',avalMeses:0});
+  addAudit(S.currentUser?.nome,'Desligamento de '+c.nome+' ('+c.motDesligamento+')');
+  closeModal('modal-desligar');
+  toast(c.nome+' desligado(a).');
+  renderColabs();
+}
+ 
+// ════════════════════════════════════════
+// CADASTRO COLABORADOR
+// ════════════════════════════════════════
+function clearNCForm() {
+  S.editingColabId = null;
+  ['nc-nome','nc-cpf','nc-nasc','nc-tel','nc-mat','nc-adm','nc-setor','nc-login','nc-horario-ini','nc-horario-fim'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.value='';
+  });
+  document.getElementById('nc-cargo').value='';
+  document.getElementById('nc-jornada').value='';
+  document.getElementById('nc-hor-row').style.display='none';
+  document.getElementById('nc-page-title').textContent = 'Novo Colaborador';
+  document.getElementById('nc-save-btn').textContent = 'Cadastrar Colaborador';
+  document.getElementById('nc-save-btn').onclick = salvarColab;
+}
+ 
+function ncToggleHorario() {
+  const j = document.getElementById('nc-jornada').value;
+  document.getElementById('nc-hor-row').style.display = j==='Diarista'?'grid':'none';
+}
+ 
+function salvarColab() {
+  const nome=document.getElementById('nc-nome').value.trim();
+  const cpf=document.getElementById('nc-cpf').value.trim();
+  const nasc=document.getElementById('nc-nasc').value;
+  const mat=document.getElementById('nc-mat').value.trim();
+  const adm=document.getElementById('nc-adm').value;
+  const cargo=document.getElementById('nc-cargo').value;
+  const jornada=document.getElementById('nc-jornada').value;
+  const horIni=document.getElementById('nc-horario-ini')?.value||'';
+  const horFim=document.getElementById('nc-horario-fim')?.value||'';
+  const horario=jornada==='Diarista'&&horIni&&horFim?horIni+' – '+horFim:'';
+  if (!nome||!cpf||!nasc||!mat||!adm||!cargo||!jornada) { toast('Preencha todos os campos obrigatórios.'); return; }
+ 
+  if (S.editingColabId) {
+    const c=S.colabs.find(x=>x.id===S.editingColabId);
+    Object.assign(c,{nome,cpf,nascimento:nasc,tel:document.getElementById('nc-tel').value,
+      matricula:mat,admissao:adm,cargo,setor:document.getElementById('nc-setor').value,
+      login:document.getElementById('nc-login').value,jornada,horario});
+    addAudit(S.currentUser?.nome,'Edição de colaborador: '+nome);
+    toast('Colaborador atualizado!');
+  } else {
+    S.colabs.push({id:'C'+Date.now(),matricula:mat,nome,cpf,nascimento:nasc,
+      tel:document.getElementById('nc-tel').value,admissao:adm,cargo,
+      setor:document.getElementById('nc-setor').value,login:document.getElementById('nc-login').value,
+      jornada,horario,ativo:true,
+      motDesligamento:'',dataDesligamento:''});
+    addAudit(S.currentUser?.nome,'Cadastro de colaborador: '+nome);
+    toast('Colaborador cadastrado!');
+  }
+  clearNCForm();
+  navigate('colaboradores');
+}
+ 
+// ════════════════════════════════════════
+// REGISTRAR EVENTO
+// ════════════════════════════════════════
+function populateEventSelects() {
+  const sel = document.getElementById('ne-colab');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">Selecione...</option>' +
+    S.colabs.filter(c=>c.ativo).sort((a,b)=>a.nome.localeCompare(b.nome))
+      .map(c=>`<option value="${c.id}">${c.nome} (#${c.matricula})</option>`).join('');
+  if (cur) sel.value = cur;
+}
+ 
+function neToggleFields() {
+  const tipo = document.getElementById('ne-tipo').value;
+  document.getElementById('ne-ferias-row').style.display = tipo==='ferias'?'grid':'none';
+  document.getElementById('ne-demissao-row').style.display = tipo==='demissao'?'grid':'none';
+}
+ 
+function neUpdateFile() {
+  const f = document.getElementById('ne-file-input').files[0];
+  document.getElementById('ne-file-name').textContent = f ? '📎 '+f.name : '';
+}
+ 
+function registrarEvento() {
+  const colabId=document.getElementById('ne-colab').value;
+  const tipo=document.getElementById('ne-tipo').value;
+  const data=document.getElementById('ne-data').value;
+  const desc=document.getElementById('ne-desc').value.trim();
+  if (!colabId||!tipo||!data) { toast('Preencha os campos obrigatórios.'); return; }
+ 
+  let dataFim='', motivo='', avalMeses=0;
+  if (tipo==='ferias') {
+    const dur=parseInt(document.getElementById('ne-ferias-dur').value);
+    const d=new Date(data); d.setDate(d.getDate()+dur);
+    dataFim=d.toISOString().split('T')[0];
+    document.getElementById('ne-data-fim').value && (dataFim=document.getElementById('ne-data-fim').value);
+  }
+  if (tipo==='demissao') {
+    motivo=document.getElementById('ne-demissao-motivo').value;
+    const c=S.colabs.find(x=>x.id===colabId);
+    if (c) { c.ativo=false; c.motDesligamento=motivo; c.dataDesligamento=data; }
+  }
+ 
+  const arquivo=document.getElementById('ne-file-input').files[0]?.name||'';
+  S.eventos.push({id:'E'+Date.now(),colabId,tipo,data,dataFim,desc:desc+(motivo?' ('+motivo+')':''),
+    autor:S.currentUser?.nome||'Sistema',arquivo,avalMeses});
+  addAudit(S.currentUser?.nome,'Evento registrado: '+tipo+' para '+S.colabs.find(x=>x.id===colabId)?.nome);
+  toast('Evento registrado com sucesso!');
+  ['ne-colab','ne-tipo','ne-data','ne-data-fim','ne-desc'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+  document.getElementById('ne-file-name').textContent='';
+  document.getElementById('ne-ferias-row').style.display='none';
+  document.getElementById('ne-demissao-row').style.display='none';
+  navigate('colaboradores');
+}
+ 
+// ════════════════════════════════════════
+// RELATÓRIO
+// ════════════════════════════════════════
+function renderRelatorio() {
+  const busca=(document.getElementById('rel-busca')?.value||'').toLowerCase();
+  const tipo=document.getElementById('rel-tipo')?.value||'';
+  const setor=document.getElementById('rel-setor')?.value||'';
+  const jornada=document.getElementById('rel-jornada')?.value||'';
+  const di=document.getElementById('rel-di')?.value||'';
+  const df=document.getElementById('rel-df')?.value||'';
+  populateSFilter('rel-setor', setor);
+ 
+  let evs=S.eventos;
+  if (tipo) evs=evs.filter(e=>e.tipo===tipo);
+  if (di) evs=evs.filter(e=>e.data>=di);
+  if (df) evs=evs.filter(e=>e.data<=df);
+ 
+  let rows=evs.map(e=>{
+    const c=S.colabs.find(x=>x.id===e.colabId);
+    if (!c) return null;
+    if (busca && !c.nome.toLowerCase().includes(busca) && !c.matricula.includes(busca)) return null;
+    if (setor && c.setor!==setor) return null;
+    if (jornada && c.jornada!==jornada) return null;
+    return {e,c};
+  }).filter(Boolean).sort((a,b)=>new Date(b.e.data)-new Date(a.e.data));
+ 
+  const counts={};
+  rows.forEach(({e})=>{ counts[e.tipo]=(counts[e.tipo]||0)+1; });
+  document.getElementById('rel-stats').innerHTML=[
+    ['atraso','Atrasos','t-amb'],['falta','Faltas','t-red'],['atestado','Atestados','t-pur'],
+    ['ferias','Férias','t-nvy'],['compromisso','Compromissos','t-grn'],['avaliacao','Avaliações',''],['extras','Extras',''],
+  ].map(([t,l,c])=>`<div class="sc ${c}"><div class="lbl">${l}</div><div class="val">${counts[t]||0}</div></div>`).join('');
+ 
+  document.getElementById('rel-tbody').innerHTML=rows.map(({e,c})=>`<tr>
+    <td style="font-family:'DM Mono',monospace;font-size:10px;">${c.matricula}</td>
+    <td><strong>${c.nome}</strong></td>
+    <td><span class="badge ${SETOR_COLORS[SETORES.indexOf(c.setor)%8]}">${c.setor}</span></td>
+    <td><span class="badge ${TIPO_BADGE[e.tipo]||'bd-gray'}">${e.tipo}</span></td>
+    <td style="font-size:11px;font-family:'DM Mono',monospace;">${fmtDate(e.data)}${e.dataFim?' – '+fmtDate(e.dataFim):''}</td>
+    <td style="color:var(--muted);font-size:11px;">${e.desc||'—'}${e.arquivo?` 📎`:''}</td>
+    <td style="font-size:11px;color:var(--muted);">${e.autor||'—'}</td>
+  </tr>`).join('')||`<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--muted);">Nenhum evento encontrado.</td></tr>`;
+}
+ 
+// ════════════════════════════════════════
+// PONTO
+// ════════════════════════════════════════
+function getPeriod() {
+  const hoje=new Date();
+  const offset=S.pontoPeriodOffset;
+  let y=hoje.getFullYear(), m=hoje.getMonth()+offset;
+  while(m<0){m+=12;y--;} while(m>11){m-=12;y++;}
+  const ini=new Date(y,m,16);
+  const fim=new Date(y,m+1,15);
+  const mNames=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  return {
+    ini:ini.toISOString().split('T')[0],
+    fim:fim.toISOString().split('T')[0],
+    label:`16/${mNames[m]}/${y} – 15/${mNames[(m+1)%12]}/${m+1>11?y+1:y}`
+  };
+}
+function changePeriod(d){ S.pontoPeriodOffset+=d; renderPonto(); }
+ 
+function renderPonto() {
+  const period=getPeriod();
+  const setor=document.getElementById('ponto-setor')?.value||'';
+  const evFilter=document.getElementById('ponto-ev-filter')?.value||'';
+  populateSFilter('ponto-setor',setor);
+  document.getElementById('ponto-periodo').textContent=period.label;
+ 
+  const evs=S.eventos.filter(e=>e.data>=period.ini&&e.data<=period.fim);
+  const cts={falta:0,atraso:0,atestado:0,ferias:0,extras:0,compromisso:0,avaliacao:0};
+  evs.forEach(e=>{if(cts[e.tipo]!==undefined)cts[e.tipo]++;});
+  document.getElementById('ponto-stats').innerHTML=`
+    <div class="sc t-red"><div class="lbl">Faltas</div><div class="val">${cts.falta}</div></div>
+    <div class="sc t-amb"><div class="lbl">Atrasos</div><div class="val">${cts.atraso}</div></div>
+    <div class="sc t-pur"><div class="lbl">Atestados</div><div class="val">${cts.atestado}</div></div>
+    <div class="sc t-nvy"><div class="lbl">Férias</div><div class="val">${cts.ferias}</div></div>
+    <div class="sc t-grn"><div class="lbl">Extras</div><div class="val">${cts.extras}</div></div>`;
+ 
+  // Agrupar por colab
+  const colabMap={};
+  evs.forEach(e=>{
+    const c=S.colabs.find(x=>x.id===e.colabId);
+    if (!c) return;
+    if (setor && c.setor!==setor) return;
+    if (evFilter && e.tipo!==evFilter) return;
+    if (!colabMap[c.id]) colabMap[c.id]={c,evs:[]};
+    colabMap[c.id].evs.push(e);
+  });
+ 
+  const TIPO_COLOR={atraso:'#9A6F02',falta:'#C0392B',atestado:'#6C3483',ferias:'#1B3A6B',extras:'#E67E22',compromisso:'#0E6655',avaliacao:'#0E6655',demissao:'#888',outros:'#888'};
+ 
+  document.getElementById('ponto-grid').innerHTML=Object.values(colabMap).map(({c,evs:cev})=>{
+    const tipoCount={};
+    cev.forEach(e=>{tipoCount[e.tipo]=(tipoCount[e.tipo]||0)+1;});
+    return `<div class="pcolab-card">
+      <div class="pcolab-head">
+        <div><div class="pcolab-name">${c.nome}</div><div class="pcolab-setor">${c.setor} · #${c.matricula}</div></div>
+      </div>
+      <div class="pcolab-eventos">
+        ${Object.entries(tipoCount).map(([t,n])=>`
+          <div class="pev-row" onclick="openPontoEvs('${c.id}','${period.ini}','${period.fim}','${t}')">
+            <span class="pev-tipo" style="color:${TIPO_COLOR[t]||'#888'};">${t}</span>
+            <span class="pev-count">${n}x ▸</span>
+          </div>`).join('')}
+      </div>
+    </div>`;
+  }).join('')||'<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--muted);">Nenhuma ocorrência no período.</div>';
+}
+ 
+function openPontoEvs(colabId, ini, fim, tipo) {
+  const c=S.colabs.find(x=>x.id===colabId);
+  const evs=S.eventos.filter(e=>e.colabId===colabId&&e.tipo===tipo&&e.data>=ini&&e.data<=fim);
+  document.getElementById('mpe-title').textContent=`${c?.nome} — ${tipo}`;
+  document.getElementById('mpe-list').innerHTML=evs.map(e=>`
+    <div class="hitem ${e.tipo}">
+      <div><div class="htype">${e.tipo}</div><div class="hdesc">${e.desc||'—'}</div>
+      ${e.dataFim?`<div style="font-size:10px;color:var(--muted);">Até: ${fmtDate(e.dataFim)}</div>`:''}
+      ${e.arquivo?`<div style="font-size:10px;color:var(--navy3);">📎 ${e.arquivo}</div>`:''}
+      <div style="font-size:10px;color:var(--muted);margin-top:2px;">Por: ${e.autor||'—'}</div>
+      </div><div class="hdate">${fmtDate(e.data)}</div>
+    </div>`).join('');
+  document.getElementById('modal-ponto-ev').classList.add('open');
+}
+ 
+// ════════════════════════════════════════
+// CALENDÁRIO DE FÉRIAS
+// ════════════════════════════════════════
+function changeFeriasMes(d){ S.feriasMesOffset+=d; renderFeriasCal(); }
+ 
+function renderFeriasCal() {
+  const setor=document.getElementById('ferias-setor')?.value||'';
+  const status=document.getElementById('ferias-status')?.value||'';
+  populateSFilter('ferias-setor',setor);
+ 
+  const hoje=new Date();
+  const limite90=new Date(hoje); limite90.setDate(hoje.getDate()+90);
+  let fEvs=S.eventos.filter(e=>e.tipo==='ferias'&&e.dataFim);
+ 
+  // Alertas
+  const criticos=fEvs.filter(e=>{const ini=new Date(e.data);const dias=Math.floor((ini-hoje)/86400000);return dias>0&&dias<30;});
+  document.getElementById('ferias-alertas').innerHTML=criticos.length?
+    `<div class="alert-bar danger">⚠️ ${criticos.length} colaborador(es) com férias em menos de 30 dias! Verifique a escala.</div>`:'';
+ 
+  // Filter to ≤90 days
+  const fEvs90=fEvs.filter(e=>{
+    const c=S.colabs.find(x=>x.id===e.colabId);
+    if(!c)return false;
+    if(setor&&c.setor!==setor)return false;
+    const ini=new Date(e.data);
+    const dias=Math.floor((ini-hoje)/86400000);
+    if(status==='vermelho'&&(dias>=30||dias<0))return false;
+    if(status==='amarelo'&&(dias<30||dias>60))return false;
+    if(status==='verde'&&dias<=60)return false;
+    return new Date(e.data)<=limite90;
+  });
+ 
+  // 3-month calendars
+  const MFULL=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  const DNAMES=['S','T','Q','Q','S','S','D'];
+  const BAR_COLORS=['#1B3A6B','#1A7A45','#C0392B','#6C3483','#0E6655','#E67E22','#1A5276','#784212','#117A65','#922B21'];
+  
+  // Build unique colab→color map
+  const allColabIds=[...new Set(fEvs90.map(e=>e.colabId))];
+  const colabColor={};
+  allColabIds.forEach((id,i)=>colabColor[id]=BAR_COLORS[i%BAR_COLORS.length]);
+ 
+  let calsHtml='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:20px;">';
+  for(let mOffset=0;mOffset<3;mOffset++){
+    const refD=new Date(hoje.getFullYear(),hoje.getMonth()+mOffset,1);
+    const mMes=refD.getMonth(),mAno=refD.getFullYear();
+    const diasNoMes=new Date(mAno,mMes+1,0).getDate();
+    const startDow=(refD.getDay()+6)%7;
+    const feriasDesseMes=fEvs90.filter(e=>{
+      const ini=new Date(e.data),fim=new Date(e.dataFim||e.data);
+      return ini<=new Date(mAno,mMes,diasNoMes)&&fim>=new Date(mAno,mMes,1);
+    });
+    calsHtml+=`<div style="background:var(--surf);border:1px solid var(--bdr);border-radius:12px;overflow:hidden;">`;
+    calsHtml+=`<div style="background:var(--navy2);padding:9px 12px;font-size:12px;font-weight:700;color:#fff;">${MFULL[mMes]} ${mAno}</div>`;
+    calsHtml+=`<div style="padding:8px;">`;
+    calsHtml+=`<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:1px;margin-bottom:3px;">`;
+    calsHtml+=DNAMES.map(d=>`<div style="text-align:center;font-size:8px;font-weight:700;color:var(--muted);">${d}</div>`).join('');
+    for(let i=0;i<startDow;i++) calsHtml+=`<div></div>`;
+    for(let d=1;d<=diasNoMes;d++){
+      const dStr=`${mAno}-${String(mMes+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      const isToday=d===hoje.getDate()&&mMes===hoje.getMonth()&&mAno===hoje.getFullYear();
+      const active=feriasDesseMes.filter(e=>e.data<=dStr&&(e.dataFim||e.data)>=dStr);
+      let bg=isToday?'#EEF3FB':'transparent';
+      let border=isToday?'1px solid var(--navy3)':'1px solid transparent';
+      let dots='';
+      if(active.length){
+        bg=colabColor[active[0].colabId]+'20';
+        dots=active.slice(0,3).map(e=>`<div style="width:4px;height:4px;border-radius:50%;background:${colabColor[e.colabId]};margin:0 auto 1px;"></div>`).join('');
+      }
+      calsHtml+=`<div style="text-align:center;padding:2px 1px;border-radius:3px;background:${bg};border:${border};">
+        <div style="font-size:9px;font-weight:${isToday?'700':'400'};color:var(--text);">${d}</div>${dots}</div>`;
+    }
+    calsHtml+=`</div>`;
+    if(feriasDesseMes.length){
+      calsHtml+=`<div style="border-top:1px solid var(--bdr);padding-top:6px;display:flex;flex-direction:column;gap:3px;">`;
+      // Deduplicate by colabId for legend
+      const seen=new Set();
+      feriasDesseMes.forEach(e=>{
+        if(seen.has(e.colabId))return; seen.add(e.colabId);
+        const c=S.colabs.find(x=>x.id===e.colabId);
+        if(!c)return;
+        calsHtml+=`<div style="display:flex;align-items:center;gap:5px;">
+          <div style="width:10px;height:4px;border-radius:2px;background:${colabColor[e.colabId]};flex-shrink:0;"></div>
+          <div style="font-size:9px;font-weight:600;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${c.nome.split(' ')[0]} ${c.nome.split(' ').pop()}</div>
+          <div style="font-size:9px;color:var(--muted);">${fmtDate(e.data).slice(0,5)}</div>
+        </div>`;
+      });
+      calsHtml+=`</div>`;
+    } else {
+      calsHtml+=`<div style="padding-top:6px;font-size:9px;color:var(--muted);text-align:center;">Sem férias neste mês</div>`;
+    }
+    calsHtml+=`</div></div>`;
+  }
+  calsHtml+='</div>';
+  document.getElementById('ferias-cal-title').textContent='Próximos 3 meses';
+  document.getElementById('ferias-cal-grid').innerHTML=calsHtml;
+ 
+  // Conflict detection per setor
+  const colabFeriasPorSetor={};
+  fEvs90.forEach(e=>{
+    const c=S.colabs.find(x=>x.id===e.colabId);
+    if(!c)return;
+    if(!colabFeriasPorSetor[c.setor])colabFeriasPorSetor[c.setor]=[];
+    colabFeriasPorSetor[c.setor].push({...e,c});
+  });
+ 
+  // Timeline sorted by date
+  const items=fEvs90.map(e=>{
+    const c=S.colabs.find(x=>x.id===e.colabId);
+    if(!c)return null;
+    const ini=new Date(e.data);
+    const dias=Math.floor((ini-hoje)/86400000);
+    let sc='bd-grn',sl='Ok';
+    if(dias<0){sc='bd-gray';sl='Concluído';}
+    else if(dias<30){sc='bd-red';sl='< 30 dias';}
+    else if(dias<=60){sc='bd-amb';sl='< 60 dias';}
+    const sameSetor=(colabFeriasPorSetor[c.setor]||[]).filter(sf=>sf.colabId!==e.colabId&&sf.data<=e.dataFim&&sf.dataFim>=e.data);
+    return{e,c,dias,sc,sl,sameSetor};
+  }).filter(Boolean).sort((a,b)=>new Date(a.e.data)-new Date(b.e.data));
+ 
+  document.getElementById('ferias-timeline').innerHTML=items.length?items.map(item=>`
+    <div class="ferias-row">
+      <div style="width:10px;height:10px;border-radius:2px;background:${colabColor[item.c.id]||'#1B3A6B'};flex-shrink:0;"></div>
+      <div class="fr-nome">${item.c.nome}</div>
+      <div class="fr-setor"><span class="badge ${SETOR_COLORS[SETORES.indexOf(item.c.setor)%8]}">${item.c.setor}</span></div>
+      <div class="fr-info">${fmtDate(item.e.data)} → ${fmtDate(item.e.dataFim)}</div>
+      ${item.sameSetor.length?`<span class="conflict-badge">⚡ conflito</span>`:''}
+      <div class="fr-status"><span class="badge ${item.sc}">${item.sl}</span></div>
+    </div>`).join(''):'<div style="text-align:center;padding:32px;color:var(--muted);">Nenhuma férias nos próximos 90 dias.</div>';
+}
+ 
+function changeBdayMes(d){ S.bdayMesOffset+=d; renderBdayCal(); }
+ 
+function renderBdayCal() {
+  const hoje=new Date();
+  const refDate=new Date(hoje.getFullYear(),hoje.getMonth()+S.bdayMesOffset,1);
+  const mes=refDate.getMonth(),ano=refDate.getFullYear();
+  const MNAMES=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  const DNAMES=['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'];
+  document.getElementById('bday-cal-title').textContent=`Aniversários — ${MNAMES[mes]} ${ano}`;
+  document.getElementById('bday-list-title').textContent=`Aniversariantes de ${MNAMES[mes]}`;
+ 
+  const diasNoMes=new Date(ano,mes+1,0).getDate();
+  const startDow=(new Date(ano,mes,1).getDay()+6)%7;
+  const dias=[];
+  for(let i=0;i<startDow;i++) dias.push(null);
+  for(let d=1;d<=diasNoMes;d++) dias.push(d);
+ 
+  const aniversariantes=S.colabs.filter(c=>c.ativo&&c.nascimento&&parseInt(c.nascimento.slice(5,7))===(mes+1));
+ 
+  document.getElementById('bday-cal-grid').innerHTML=
+    DNAMES.map(d=>`<div class="bcal-dh">${d}</div>`).join('')+
+    dias.map(d=>{
+      if(!d) return `<div style="min-height:60px;"></div>`;
+      const isToday=d===hoje.getDate()&&mes===hoje.getMonth()&&ano===hoje.getFullYear();
+      const bdaysHere=aniversariantes.filter(c=>parseInt(c.nascimento.slice(8,10))===d);
+      return `<div class="bcal-day${isToday?' today':''}">
+        <div class="bcal-dn">${d}</div>
+        ${bdaysHere.map(c=>`<div class="bcal-ev">${c.nome.split(' ')[0]}</div>`).join('')}
+      </div>`;
+    }).join('');
+ 
+  // Lista 3 colunas
+  const lista=aniversariantes.sort((a,b)=>parseInt(a.nascimento.slice(8,10))-parseInt(b.nascimento.slice(8,10)));
+  document.getElementById('bday-list').innerHTML=lista.length?`
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
+      ${lista.map(c=>{
+        const dia=parseInt(c.nascimento.slice(8,10));
+        const age=ano-parseInt(c.nascimento.slice(0,4));
+        const isToday=dia===hoje.getDate()&&mes===hoje.getMonth()&&ano===hoje.getFullYear();
+        return `<div class="bday-item" style="background:var(--surf);border:1px solid var(--bdr);border-radius:10px;padding:10px 12px;flex-direction:column;align-items:flex-start;gap:6px;${isToday?'border-color:var(--red);background:#FFF5F5;':''}">
+          <div style="display:flex;align-items:center;gap:8px;width:100%;">
+            <div class="bday-av" style="${isToday?'background:var(--red2);':''}">${initials(c.nome)}</div>
+            <div style="flex:1;min-width:0;"><div class="bday-name" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${c.nome}${isToday?' 🎂':''}</div><div class="bday-info">${c.setor}</div></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;width:100%;">
+            <span style="font-size:10px;color:var(--muted);">${c.cargo}</span>
+            <span style="font-size:11px;font-weight:700;color:var(--red);">${String(dia).padStart(2,'0')}/${String(mes+1).padStart(2,'0')} · ${age}a</span>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`:'<div style="text-align:center;padding:32px;color:var(--muted);">Nenhum aniversariante neste mês.</div>';
+}
+ 
+// ════════════════════════════════════════
+// USUÁRIOS
+// ════════════════════════════════════════
+function renderUsuarios() {
+  document.getElementById('user-self-warn').style.display='none';
+  const isAdmin = S.currentUser?.perfil === 'admin';
+  document.getElementById('users-tbody').innerHTML=S.usuarios.map(u=>{
+    const isSelf=S.currentUser?.id===u.id;
+    let acoes = '';
+    if (isSelf) acoes = '<span style="font-size:11px;color:var(--muted);">Você (bloqueado)</span>';
+    else if (isAdmin) acoes = `<button class="btn btn-outline btn-xs" onclick="openEditUser('${u.id}')">Editar</button>`;
+    else acoes = '<span style="font-size:11px;color:var(--muted);">Sem permissão</span>';
+    return `<tr>
+      <td><strong>${u.nome}</strong></td>
+      <td style="font-family:'DM Mono',monospace;font-size:11px;">${u.cpf}</td>
+      <td style="font-size:11px;">${u.email}</td>
+      <td><span class="badge ${u.perfil==='admin'?'bd-red':'bd-nvy'}">${u.perfil}</span></td>
+      <td>${acoes}</td>
+    </tr>`;
+  }).join('');
+  // Hide Add User button if not admin
+  const addBtn = document.querySelector('#page-usuarios .btn-primary');
+  if (addBtn) addBtn.style.display = isAdmin ? 'inline-flex' : 'none';
+}
+ 
+function openAddUser() {
+  if (S.currentUser?.perfil !== 'admin') { toast('Apenas administradores podem criar usuários.'); return; }
+  S.editingUserId=null;
+  document.getElementById('mu-title').textContent='Novo Usuário';
+  ['mu-nome','mu-cpf','mu-email','mu-senha'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('mu-perfil').value='lideranca';
+  document.getElementById('modal-user').classList.add('open');
+}
+ 
+function openEditUser(id) {
+  if (S.currentUser?.perfil !== 'admin') { toast('Apenas administradores podem editar usuários.'); return; }
+  if (S.currentUser?.id===id) { document.getElementById('user-self-warn').style.display='flex'; return; }
+  S.editingUserId=id;
+  const u=S.usuarios.find(x=>x.id===id);
+  document.getElementById('mu-title').textContent='Editar Usuário';
+  document.getElementById('mu-nome').value=u.nome;
+  document.getElementById('mu-cpf').value=u.cpf;
+  document.getElementById('mu-email').value=u.email;
+  document.getElementById('mu-senha').value='';
+  document.getElementById('mu-perfil').value=u.perfil;
+  document.getElementById('modal-user').classList.add('open');
+}
+ 
+function saveUser() {
+  const nome=document.getElementById('mu-nome').value.trim();
+  const cpf=document.getElementById('mu-cpf').value.trim();
+  const email=document.getElementById('mu-email').value.trim();
+  const senha=document.getElementById('mu-senha').value;
+  const perfil=document.getElementById('mu-perfil').value;
+  if (!nome||!cpf||!email) { toast('Preencha todos os campos.'); return; }
+  if (S.editingUserId) {
+    const u=S.usuarios.find(x=>x.id===S.editingUserId);
+    Object.assign(u,{nome,cpf,email,perfil});
+    if (senha) u.senha=senha;
+    addAudit(S.currentUser?.nome,'Edição de usuário: '+nome);
+    toast('Usuário atualizado!');
+  } else {
+    if (!senha||senha.length<6) { toast('Senha deve ter mínimo 6 caracteres.'); return; }
+    if (S.usuarios.length>=10) { toast('Limite de 10 usuários atingido.'); return; }
+    S.usuarios.push({id:'U'+Date.now(),nome,cpf,email,senha,perfil});
+    addAudit(S.currentUser?.nome,'Criação de usuário: '+nome);
+    toast('Usuário criado!');
+  }
+  closeModal('modal-user');
+  renderUsuarios();
+}
+ 
+// ════════════════════════════════════════
+// AUDITORIA
+// ════════════════════════════════════════
+function renderAuditoria() {
+  const busca=(document.getElementById('aud-busca')?.value||'').toLowerCase();
+  const di=document.getElementById('aud-di')?.value||'';
+  const df=document.getElementById('aud-df')?.value||'';
+  const isAdmin = S.currentUser?.perfil === 'admin';
+  let list=S.auditoria;
+  // Non-admins only see their own actions
+  if (!isAdmin) list=list.filter(a=>a.quem===S.currentUser?.nome);
+  if (busca) list=list.filter(a=>a.quem.toLowerCase().includes(busca)||a.acao.toLowerCase().includes(busca));
+  const banner = !isAdmin ? '<div style="background:#FEF8E7;border:1px solid #FADFA3;border-radius:8px;padding:10px 14px;font-size:12px;color:#9A6F02;margin-bottom:12px;">⚠️ Você está vendo apenas suas próprias ações. Administradores veem todas.</div>' : '';
+  document.getElementById('audit-list').innerHTML=banner+list.map(a=>`
+    <div class="audit-item">
+      <span class="audit-who">${a.quem}</span>
+      <span class="audit-what">${a.acao}</span>
+      <span class="audit-when">${a.quando}</span>
+    </div>`).join('')||'<div style="text-align:center;padding:20px;color:var(--muted);">Nenhum registro.</div>';
+}
+ 
+// ════════════════════════════════════════
+// FORMULÁRIO EXTERNO
+// ════════════════════════════════════════
+function efToggleHorario() {
+  const j=document.getElementById('ef-jornada').value;
+  document.getElementById('ef-hor-g').style.display=j==='Diarista'?'block':'none';
+}
+ 
+function submitExtForm() {
+  const nome=document.getElementById('ef-nome').value.trim();
+  const cpf=document.getElementById('ef-cpf').value.trim();
+  const nasc=document.getElementById('ef-nasc').value;
+  const tel=document.getElementById('ef-tel').value.trim();
+  const mat=document.getElementById('ef-mat').value.trim();
+  const adm=document.getElementById('ef-adm').value;
+  const cargo=document.getElementById('ef-cargo').value;
+  const jornada=document.getElementById('ef-jornada').value;
+  const efHorIni=document.getElementById('ef-horario-ini').value;
+  const efHorFim=document.getElementById('ef-horario-fim').value;
+  const efHorario=jornada==='Diarista'&&efHorIni&&efHorFim?efHorIni+' – '+efHorFim:'';
+  if (!nome||!cpf||!nasc||!tel||!mat||!adm||!cargo||!jornada) { toast('Preencha todos os campos obrigatórios.'); return; }
+  // Simula integração: cria o colab no sistema
+  S.colabs.push({
+    id:'CEF'+Date.now(), matricula:mat, nome, cpf, nascimento:nasc, tel, admissao:adm,
+    cargo, setor:document.getElementById('ef-setor').value,
+    login:'', jornada, horario:efHorario,
+    ativo:true, motDesligamento:'', dataDesligamento:''
+  });
+  addAudit('Formulário Externo','Cadastro automático: '+nome);
+  // Persist to sessionStorage so system page sees the new colab
+  try {
+    const stored = JSON.parse(sessionStorage.getItem('richet_pending_colabs')||'[]');
+    stored.push(S.colabs[S.colabs.length-1]);
+    sessionStorage.setItem('richet_pending_colabs', JSON.stringify(stored));
+  } catch(e){}
+  document.getElementById('ef-success').style.display='block';
+  // Hide all form fields
+  document.querySelectorAll('.ext-card .fg, .ext-card .frow, .ext-card .fsec').forEach(el=>el.style.display='none');
+  document.querySelectorAll('.ext-card button.btn').forEach(el=>el.style.display='none');
+}
+ 
+// ════════════════════════════════════════
+// HELPERS
+// ════════════════════════════════════════
+function initials(nome) {
+  const p=nome.split(' ');
+  return (p[0][0]+(p[p.length-1]?.[0]||'')).toUpperCase();
+}
+function fmtDate(d) {
+  if (!d) return '—';
+  const [y,m,day]=d.split('-');
+  return `${day}/${m}/${y}`;
+}
+function populateSFilter(id, currentVal) {
+  const el=document.getElementById(id);
+  if (!el) return;
+  const saved=currentVal!==undefined?currentVal:el.value;
+  const unique=[...new Set(S.colabs.map(c=>c.setor).filter(Boolean))].sort();
+  const first=el.options[0].text;
+  el.innerHTML=`<option value="">${first}</option>`+unique.map(s=>`<option value="${s}">${s}</option>`).join('');
+  el.value=saved||'';
+}
+function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.style.opacity='1';
+  setTimeout(()=>t.style.opacity='0',3000);
+}
+function updateDate(){
+  const el=document.getElementById('tb-date');
+  if (el) el.textContent=new Date().toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'short',year:'numeric'});
+}
+ 
+// ════════════════════════════════════════
+// EXTERNAL FORM DETECTION
+// ════════════════════════════════════════
+function checkRoute() {
+  if (window.location.search.includes('form=1')) {
+    document.getElementById('login-screen').style.display='none';
+    document.getElementById('ext-form-screen').style.display='flex';
+  }
+}
+ 
+// ════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════
+initData();
+updateDate();
+setInterval(updateDate, 60000);
+checkRoute();
+ 
+// Close modal on overlay click
+document.querySelectorAll('.moverlay').forEach(ov => {
+  ov.addEventListener('click', e => { if (e.target===ov) ov.classList.remove('open'); });
+});
+ 
+// Keyboard ESC
+document.addEventListener('keydown', e => {
+  if (e.key==='Escape') document.querySelectorAll('.moverlay.open').forEach(m=>m.classList.remove('open'));
+});
+</script>
+</body>
+</html>
